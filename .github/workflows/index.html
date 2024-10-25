@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DJMoonZHX72 - Moon Bot (beta)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c3e50;
+            color: #00f;
+            text-align: center;
+            padding: 20px;
+        }
+        #chatbox {
+            border: 1px solid #ecf0f1;
+            padding: 10px;
+            margin: 20px auto;
+            width: 300px;
+            height: 200px;
+            overflow-y: scroll;
+            background-color: #34495e;
+        }
+        #userInput {
+            width: 300px;
+            padding: 10px;
+        }
+        #sendButton {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #e74c3c;
+            border: none;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Moon Bot (beta)</h1>
+    <div id="chatbox"></div>
+    <input type="text" id="userInput" placeholder="Ketik pesan...">
+    <button id="sendButton">Kirim</button>
+    <b1>Ketik "menu" Untuk Info</b1>
+    <div class="credits"<a href="https://youtu.be/dQw4w9WgXcQ">by DJMoonZHX72</a></div>
+
+    <script>
+        const chatbox = document.getElementById('chatbox');
+        const userInput = document.getElementById('userInput');
+        const sendButton = document.getElementById('sendButton');
+
+        sendButton.addEventListener('click', sendMessage);
+
+        function sendMessage() {
+            const userMessage = userInput.value;
+            if (userMessage.trim() === '') return;
+
+            displayMessage('Anda: ' + userMessage);
+            userInput.value = '';
+
+            // Contoh respons dari bot
+            let botResponse = getBotResponse(userMessage);
+            displayMessage('Moon Bot: ' + botResponse);
+        }
+
+        function displayMessage(message) {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = message;
+            chatbox.appendChild(messageElement);
+            chatbox.scrollTop = chatbox.scrollHeight; // Scroll ke bawah
+        }
+
+        function getBotResponse(message) {
+            message = message.toLowerCase();
+            if (message.includes('halo')) {
+                return 'Halo! Bagaimana saya bisa membantu Anda?';
+            } else if (message.includes('apa kabar')) {
+                return 'Saya baik-baik saja, terima kasih! Bagaimana dengan Anda?';
+            } else if (message.includes('siapa kamu')) {
+                return 'Saya adalah Moon Bot, asisten virtual Anda!';
+            } else if (message.includes('redeem code')) {
+                return 'Kode Redeem Hari Ini Adalah LC729696';
+            } else if (message.includes('menu')) {
+                return 'Command: redeem code, rank, player info (nama player)'
+            } else if (message.includes('rank')) {
+                return 'VIP: Harga, MVP: Harga, LEGEND: Harga, MYTHIC: Harga, LUXURY: Harga, HYPER: Harga'
+            } else if (message.includes('player info djmoonzhx72')) {
+                return 'Name: DJMoonZHX72 Rank: CO-OWNER, PlayerId: 2'
+            } else if (message.includes('player info rizkiwibu9696')) {
+                return 'Name: Rizkiwibu9696, Rank: OWNER, PlayerId: 1'
+            } else {
+                return 'Maaf, saya tidak mengerti. Coba tanyakan hal lain!';
+            }
+        }
+    </script>
+</body>
+  </html>
