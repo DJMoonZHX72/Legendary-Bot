@@ -35,7 +35,8 @@
     </style>
 </head>
 <body>
-    <h1>Moon Bot 1.2.0</h1>
+    <h1>Moon Bot</h1>
+    <b1>V1.2.0</b1>
     <div id="chatbox"></div>
     <input type="text" id="userInput" placeholder="Ketik pesan...">
     <button id="sendButton">Kirim</button>
@@ -76,7 +77,7 @@
             } else if (message.includes('redeem code')) {
                 return 'Kode Redeem Hari Ini Adalah LC729696';
             } else if (message.includes('menu')) {
-                return 'Command: redeem code, rank, player info (nama player), weapon list (common/uncommon/rare/legendary/mythic), rules, admin slot, info server, info bot, changelog';//menu Dalam bot
+                return 'Command: redeem code, rank, player info (nama player), weapon list (common/uncommon/rare/legendary/mythic), rules, admin slot, info server, info bot, changelog, support';//menu Dalam bot
             } else if (message.includes('rank')) {
                 return 'VIP: Harga, MVP: Harga, LEGEND: Harga, MYTHIC: Harga, LUXURY: Harga, HYPER: Harga';
             } else if (message.includes('player info djmoonzhx72')) {
@@ -107,8 +108,8 @@
                 return 'Nama Bot: Moon Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72) Untuk Server Legendary Craft, Versi Bot: 1.2.0';
             } else if (message.includes('changelog')) {
                 return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot';
-            } else if (message.includes('©edit script©')) {
-                return 'https://github.com/DJMoonZHX72/Moon-Bot/edit/main/.github/workflows/index.html';
+            } else if (message.includes('support')) {
+                return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
             } else {
                 return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
             }
