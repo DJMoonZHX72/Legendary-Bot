@@ -114,8 +114,6 @@ function getBotResponse(message) {
         return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix';
     } else if (message.includes('support')) {
         return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D https://github.com/DJMoonZHX72 Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
-    } else if (message.includes('⎙')) {
-        return 'https://github.com/DJMoonZHX72/Legendary-Bot/edit/main/main.js';
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
     }
@@ -135,9 +133,21 @@ function checkQuizAnswer(answer) {
         if (correctAnswers === 5 && !achievements.includes('Beginner')) {
             achievements.push('Beginner');
             achievementMessage = 'Selamat! Anda mendapatkan achievement: Beginner';
-        } else if (correctAnswers === 10 && !achievements.includes('Expert')) {
+        } else if (correctAnswers === 20 && !achievements.includes('Expert')) {
             achievements.push('Expert');
             achievementMessage = 'Selamat! Anda mendapatkan achievement: Expert';
+        } else if (correctAnswers === 40 && !achievements.includes('Advanced')) {
+            achievements.push('Advanced');
+            achievementMessage = 'Selamat! Anda mendapatkan achievement: Advanced';
+        } else if (correctAnswers === 60 && !achievements.includes('Pro')) {
+            achievements.push('Pro');
+            achievementMessage = 'Selamat! Anda mendapatkan achievement: Pro';
+        } else if (correctAnswers === 80 && !achievements.includes('Elite')) {
+            achievements.push('Elite');
+            achievementMessage = 'Selamat! Anda mendapatkan achievement: Elite';
+        } else if (correctAnswers === 100 && !achievements.includes('God')) {
+            achievements.push('God');
+            achievementMessage = 'Selamat! Anda mendapatkan achievement: God!!!';
         }
 
         quizMode = false;
