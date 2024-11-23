@@ -105,7 +105,7 @@ function getBotResponse(message) {
     } else if (message.includes('weapon list')) {
         return 'Gunakan weapon list (common/uncommon/rare/legendary/mythic)!';
     } else if (message.includes('admin slot')) {
-        return 'Slot Admin Sisa 8';
+        return 'Slot Admin Sisa 9';
     } else if (message.includes('info server')) {
         return 'Server: Legendary Craft, Dibuat pada tanggal __/__/____, Pembuat Server: Rizkiwibu9696';
     } else if (message.includes('info bot')) {
