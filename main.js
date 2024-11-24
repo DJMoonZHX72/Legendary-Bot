@@ -1,3 +1,5 @@
+console.warn('main.js loaded')
+
 const chatbox = document.getElementById('chatbox');
 const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
