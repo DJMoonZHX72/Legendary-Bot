@@ -87,33 +87,35 @@ function getBotResponse(message) {
     } else if (message.includes('redeem code')) {
         return 'Kode Redeem Hari Ini Adalah Legendary72';
     } else if (message.includes('menu')) {
-        return 'Command: redeem code, rank, weapon list (common/uncommon/rare/legendary/mythic), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama';
+        return 'Command: redeem code, rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama';
     } else if (message.includes('achievement')) {
         return displayAchievements();
     } else if (message.includes('rank')) {
         return 'VIP: Harga, MVP: Harga, LEGEND: Harga, MYTHIC: Harga, LUXURY: Harga, HYPER: Harga';
     } else if (message.includes('weapon list common')) {
-        return 'Common: Wooden Sword, Golden Sword, Stone Sword, Iron Sword, Shuriken, Basic Hammer, Circus Cluster, Gilded Scythe, Sonic Blade, Spell Twister.';
+        return 'Common: Wooden Sword, Golden Sword, Stone Sword, Iron Sword, Bow, Crossbow, Copper Sword.';
     } else if (message.includes('weapon list uncommon')) {
-        return 'Uncommon: Diamond Sword, Netherite Sword.';
+        return 'Uncommon: Diamond Sword, Netherite Sword, Assassin Blade, Breeze Wand, Claw, Exposed Copper Sword, Weathered Copper Sword, Dagger, Double Axe, Firework Sword, Jester Cane, Magic Wand, Spear.';
     } else if (message.includes('weapon list rare')) {
-        return 'Rare: Demonized Cracker, Mana Cracker, Celestial Blade, Crimson Slicer, Crimson Blade, Ender Wand, Gilded Guiter, Magma Hammer, Skull Wand, Upgraded Netherite Sword, Void Blade, War Axe.';
+        return 'Rare: Battle Axe, Club, Oxidized Copper Sword, End Wand, Frostbite, Gem Crusher, Goat Hammer, Golden Trident, Great Hammer, Halbert, Healing Wand, Katana, Lucky Sword, Phantom Blade, Scimitar, Scythe, Sickle, Spider Sword, Venomstrike, Villager Claymore, Wither Sword, Wolf Glaive';
     } else if (message.includes('weapon list legendary')) {
-        return 'Legendary: Basic Hammer(modified), Ender Wand Activated, Upgraded Netherite Sword (V2&V3), War Hammer, War Mace.';
+        return 'Legendary: Mace, Dragonfang, Fire Armblade, Flamebrand, Ham Bat, Lance, Lightsaber, Obsidian Sword, Vampire Sword, Warhammer.';
     } else if (message.includes('weapon list mythic')) {
-        return 'Mythic: God of The Death Axe, Fenuzdonoa Sword, Dark Blade, Elheim Trident, Dual Ender Blade, Flamescion Blade, Frost Slayer, Doombringer Axe.';
+        return 'Mythic: God of The Death Axe, Fenuzdonoa Sword, Elheim Trident, Dual Ender Blade, Flamescion Blade, Frost Slayer.';
+    } else if (message.includes('weapon list celestial')) {
+        return 'Celestial: Voidblade💀, Flame Bow, Doombringer Axe, Dark Blade.'
     } else if (message.includes('rules')) {
         return 'Rules: No Spam, No Promosi Apapun, No X-ray, No Cheat, No Homo, No Glitch';
     } else if (message.includes('weapon list')) {
-        return 'Gunakan weapon list (common/uncommon/rare/legendary/mythic)!';
+        return 'Gunakan weapon list (common/uncommon/rare/legendary/mythic/celestial)!';
     } else if (message.includes('admin slot')) {
         return 'Slot Admin Sisa 9';
     } else if (message.includes('info server')) {
         return 'Server: Legendary Craft, Dibuat pada tanggal __/__/____, Pembuat Server: Rizkiwibu9696';
     } else if (message.includes('info bot')) {
-        return 'Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72) Untuk Server Legendary Craft, Versi Bot: 1.6.1';
+        return 'Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72) Untuk Info Server Legendary Craft, Versi Bot: 1.7.0';
     } else if (message.includes('changelog')) {
-        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix';
+        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List';
     } else if (message.includes('support')) {
         return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D https://github.com/DJMoonZHX72 Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
     } else {
