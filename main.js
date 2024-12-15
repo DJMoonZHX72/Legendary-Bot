@@ -49,7 +49,9 @@ const questions = [
     { question: "Negara terbesar di dunia berdasarkan luas wilayah adalah?", answer: "rusia" },
     { question: "Jika sebuah segitiga memiliki sisi 3 cm, 4 cm, dan 5 cm, maka jenis segitiga ini adalah?", answer: "segitiga siku-siku" },
     { question: "Apa nama proses tumbuhan membuat makanan sendiri?", answer: "fotosintesis" },
-    { question: "Hewan apa yang dikenal sebagai mamalia terbesar di dunia?", answer: "paus biru" }
+    { question: "Hewan apa yang dikenal sebagai mamalia terbesar di dunia?", answer: "paus biru" },
+    { question: "Apa yang bisa dipatahkan, tapi tak pernah dipegang?", answer: "janji" },
+    { question: "Apa yang naik, tapi tidak pernah turun?", answer: "umur" }
 ];
 
 sendButton.addEventListener('click', sendMessage);
