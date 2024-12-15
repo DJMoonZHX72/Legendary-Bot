@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const questions = [
-    { question: "Apa ibu kota Indonesia?", answer: "jakarta" },
+    { question: "Apa ibu kota Indonesia?", answer: "ikn" },//update ibukotanya🗿
     { question: "30×34 berapa?", answer: "1020" },
     { question: "Siapa penemu bola lampu?", answer: "thomas alva edison" },
     { question: "Hewan tercepat di dunia?", answer: "cheetah" },
