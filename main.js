@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const questions = [
     { question: "Apa ibu kota Indonesia?", answer: "jakarta" },
     { question: "30×34 berapa?", answer: "1020" },
-    { question: "Siapa penemu bola lampu?", answer: "thomas edison" },
+    { question: "Siapa penemu bola lampu?", answer: "thomas alva edison" },
     { question: "Hewan tercepat di dunia?", answer: "cheetah" },
     { question: "Apa nama planet terbesar di tata surya?", answer: "yupiter" },
     { question: "Berapa jumlah pulau yang ada di Indonesia? A:10.000 B: 13.000 C:17.000 D:20.000", answer: "c" },
