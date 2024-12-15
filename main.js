@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const questions = [
-    { question: "Apa ibu kota Indonesia?", answer: "ikn" },//update ibukotanya🗿
+    { question: "Apa ibu kota Indonesia?", answer: "ikn" },//ibukota indo update🗿
     { question: "30×34 berapa?", answer: "1020" },
     { question: "Siapa penemu bola lampu?", answer: "thomas alva edison" },
     { question: "Hewan tercepat di dunia?", answer: "cheetah" },
@@ -46,7 +46,10 @@ const questions = [
     { question: "1 Dekade = berapa tahun?", answer: "10" },
     { question: "Apa ibukota Jepang?", answer: "tokyo" },
     { question: "Tahun berapa perang dunia II berakhir?", answer: "1945" },
-    { question: "Negara terbesar di dunia berdasarkan luas wilayah adalah?", answer: "rusia" }
+    { question: "Negara terbesar di dunia berdasarkan luas wilayah adalah?", answer: "rusia" },
+    { question: "Jika sebuah segitiga memiliki sisi 3 cm, 4 cm, dan 5 cm, maka jenis segitiga ini adalah?", answer: "segitiga siku-siku" },
+    { question: "Apa nama proses tumbuhan membuat makanan sendiri?", answer: "fotosintesis" },
+    { question: "Hewan apa yang dikenal sebagai mamalia terbesar di dunia?", answer: "paus biru" }
 ];
 
 sendButton.addEventListener('click', sendMessage);
