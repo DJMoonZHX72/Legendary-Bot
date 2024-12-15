@@ -7,6 +7,9 @@ let quizMode = false;
 let currentQuestion = {};
 let correctAnswers = 0; // Hitungan jawaban benar untuk achievement
 const achievements = [];
+let afkTimer = null;
+let isAfk = false;
+
 
 function saveAchievements() {
     localStorage.setItem('achievements', JSON.stringify(achievements));
@@ -17,6 +20,7 @@ function saveAchievements() {
 let userName = localStorage.getItem('userName') || '';
 
 document.addEventListener('DOMContentLoaded', () => {
+    startAfkTimer();
     if (!userName) {
         userName = prompt('Halo! Siapa nama Anda?');
         if (userName) {
@@ -57,6 +61,7 @@ const questions = [
 sendButton.addEventListener('click', sendMessage);
 
 function sendMessage() {
+    resetAfkTimer();
     const userMessage = userInput.value;
     if (userMessage.trim() === '') return;
 
@@ -143,7 +148,7 @@ function getBotResponse(message) {
     } else if (message.includes('support')) {
         return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D https://github.com/DJMoonZHX72 Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
     } else if (message.includes('info a')) {
-        return 'info: Beginner: 5 jawaban benar di quiz. Expert: 20 jawaban benar di quiz. Advanced: 40 jawaban benar di quiz. Pro: 60 jawaban benar di quiz. Elite: 80 jawaban benar di quiz. God: 100 jawaban benar di quiz. Find The Secret: Temukan Rahasia';
+        return 'info: Beginner: 5 jawaban benar di quiz. Expert: 20 jawaban benar di quiz. Advanced: 40 jawaban benar di quiz. Pro: 60 jawaban benar di quiz. Elite: 80 jawaban benar di quiz. God: 100 jawaban benar di quiz. Find The Secret: Temukan Rahasia. AFK?: AFK Selama 1 Jam 🗿';
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
     }
@@ -209,4 +214,30 @@ function calculate(expression) {
     } catch {
         return 'Ekspresi tidak valid. Contoh penggunaan: calc 1+1, calc 2-1, calc 2*2, calc 4/2';
     }
+}
+
+function startAfkTimer() {
+    // Hentikan timer lama jika ada
+    if (afkTimer) {
+        clearTimeout(afkTimer);
+    }
+
+    // Mulai timer AFK
+    afkTimer = setTimeout(() => {
+        isAfk = true;
+
+        // Tambahkan achievement jika belum ada
+        if (!achievements.includes('AFK?')) {
+            achievements.push('AFK?');
+            saveAchievements();
+            displayMessage('Bot: Selamat! Anda mendapatkan achievement: AFK?.');
+        }
+    }, 1000); // 60 detik
+}
+
+function resetAfkTimer() {
+    if (isAfk) {
+        isAfk = false;
+    }
+    startAfkTimer(); // Reset timer saat ada aktivitas
 }
