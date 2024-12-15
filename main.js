@@ -207,6 +207,6 @@ function calculate(expression) {
     try {
         return `Hasil: ${eval(expression)}`;
     } catch {
-        return 'Ekspresi tidak valid. Contoh penggunaan: calc 1+1, calc 2-1, calc 2*2, calc 4/2'';
+        return 'Ekspresi tidak valid. Contoh penggunaan: calc 1+1, calc 2-1, calc 2*2, calc 4/2';
     }
 }
