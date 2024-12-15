@@ -232,7 +232,7 @@ function startAfkTimer() {
             saveAchievements();
             displayMessage('Bot: Selamat! Anda mendapatkan achievement: AFK?.');
         }
-    }, 1000); // 60 detik
+    }, 3600000); // 60 detik
 }
 
 function resetAfkTimer() {
