@@ -9,7 +9,27 @@ let correctAnswers = 0; // Hitungan jawaban benar untuk achievement
 const achievements = [];
 let afkTimer = null;
 let isAfk = false;
+const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
 
+function updateLeaderboard() {
+    const existingPlayer = leaderboard.find(player => player.name === userName);
+    if (existingPlayer) {
+        existingPlayer.score = Math.max(existingPlayer.score, correctAnswers);
+    } else {
+        leaderboard.push({ name: userName, score: correctAnswers });
+    }
+    leaderboard.sort((a, b) => b.score - a.score);
+    localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+}
+
+function displayLeaderboard() {
+    if (leaderboard.length === 0) {
+        return 'Leaderboard kosong. Mulailah bermain dan dapatkan skor tertinggi!';
+    }
+    return leaderboard
+        .map((player, index) => `${index + 1}. ${player.name}: ${player.score} jawaban benar`)
+        .join('\n');
+}
 
 function saveAchievements() {
     localStorage.setItem('achievements', JSON.stringify(achievements));
@@ -108,6 +128,8 @@ function getBotResponse(message) {
         } else {
             return 'Nama tidak diubah.';
         }
+    } else if (message.includes('leaderboard')) {
+        return displayLeaderboard();
     } else if (message.includes('calc')) {
         const expression = message.replace('calc ', '');
         return calculate(expression);
@@ -116,7 +138,7 @@ function getBotResponse(message) {
     } else if (message.includes('redeem code')) {
         return 'Kode Redeem Hari Ini Adalah Legendary72';
     } else if (message.includes('menu')) {
-        return 'Command: redeem code, rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info a';
+        return 'Command: redeem code, rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info a, leaderboard';
     } else if (message.includes('achievement')) {
         return displayAchievements();
     } else if (message.includes('rank')) {
@@ -142,9 +164,9 @@ function getBotResponse(message) {
     } else if (message.includes('info server')) {
         return 'Server: Legendary Craft, Dibuat pada tanggal __/__/____, Pembuat Server: Rizkiwibu9696';
     } else if (message.includes('info bot')) {
-        return 'Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72) Untuk Server Legendary Craft, Versi Bot: 1.8.0';
+        return 'Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72) Untuk Server Legendary Craft, Versi Bot: 1.9.0';
     } else if (message.includes('changelog')) {
-        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System';
+        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard';
     } else if (message.includes('support')) {
         return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D https://github.com/DJMoonZHX72 Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
     } else if (message.includes('info a')) {
@@ -163,8 +185,18 @@ function startQuiz() {
 function checkQuizAnswer(answer) {
     if (answer.toLowerCase() === currentQuestion.answer) {
         correctAnswers++;
+        
+        const playerIndex = leaderboard.findIndex(player => player.name === userName)
+        if (playerIndex !== -1) {
+            leaderboard[playerIndex].score = correctAnswers;
+        } else {
+            leaderboard.push({ name: userName, score: correctAnswers })
+        }
+        
+        localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+        
         let achievementMessage = '';
-
+        
         if (correctAnswers === 5 && !achievements.includes('Beginner')) {
             achievements.push('Beginner');
             saveAchievements();
