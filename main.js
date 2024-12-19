@@ -10,6 +10,32 @@ const achievements = [];
 let afkTimer = null;
 let isAfk = false;
 const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+
+function addItemToInventory(item) {
+    inventory.push(item);
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+
+    let achievementMessage = '';
+    
+    if (item.toLowerCase() === 'diamond' && !achievements.includes('Diamonds?')) {
+    achievements.push('Diamonds?');
+    saveAchievements();
+    achievementMessage += '\nSelamat! Anda mendapatkan achievement: Diamonds?';
+    }
+    
+    return achievementMessage 
+        ? `Item "${item}" berhasil ditambahkan ke inventori Anda!\n${achievementMessage}`
+        : `Item "${item}" berhasil ditambahkan ke inventori Anda!`;
+}
+
+function displayInventory() {
+    if (inventory.length === 0) {
+        return 'Inventori Anda kosong.';
+    }
+    return `Inventori Anda: ${inventory.join(', ')}`;
+}
+
 
 function updateLeaderboard() {
     const existingPlayer = leaderboard.find(player => player.name === userName);
@@ -131,16 +157,18 @@ function getBotResponse(message) {
         }
     } else if (message.includes('leaderboard')) {
         return displayLeaderboard();
+    } else if (message.includes('inv')) {
+        return displayInventory();
     } else if (message.includes('calc')) {
         const expression = message.replace('calc ', '');
         return calculate(expression);
     } else if (message.includes('quiz')) {
         return startQuiz();
-    } else if (message.includes('redeem code')) {
-        return 'Kode Redeem Hari Ini Adalah Legendary72';
+    } else if (message.includes('legendary72')) {
+        return addItemToInventory('Diamond');
     } else if (message.includes('menu')) {
-        return 'Command: redeem code, rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info a, leaderboard';
-    } else if (message.includes('achievement')) {
+        return 'Command: redeem code, rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, lihat achievement, ganti nama, info achievement, leaderboard, inv';
+    } else if (message.includes('lihat achievement')) {
         return displayAchievements();
     } else if (message.includes('rank')) {
         return 'VIP: Harga, MVP: Harga, LEGEND: Harga, MYTHIC: Harga, LUXURY: Harga, HYPER: Harga';
@@ -165,13 +193,15 @@ function getBotResponse(message) {
     } else if (message.includes('info server')) {
         return 'Server: Legendary Craft, Dibuat pada tanggal __/__/____, Pembuat Server: Rizkiwibu9696';
     } else if (message.includes('info bot')) {
-        return 'Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72) Untuk Server Legendary Craft, Versi Bot: 1.9.0';
+        return 'Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72) Untuk Server Legendary Craft, Versi Bot: 1.10.0';
     } else if (message.includes('changelog')) {
-        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation';
+        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory';
     } else if (message.includes('support')) {
         return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D https://github.com/DJMoonZHX72 Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
-    } else if (message.includes('info a')) {
-        return 'info: Beginner: 5 jawaban benar di quiz. Expert: 20 jawaban benar di quiz. Advanced: 40 jawaban benar di quiz. Pro: 60 jawaban benar di quiz. Elite: 80 jawaban benar di quiz. God: 100 jawaban benar di quiz. Find The Secret: Temukan Rahasia. AFK?: AFK Selama 1 Jam 🗿';
+    } else if (message.includes('info achievement')) {
+        return 'info: Beginner: 5 jawaban benar di quiz. Expert: 20 jawaban benar di quiz. Advanced: 40 jawaban benar di quiz. Pro: 60 jawaban benar di quiz. Elite: 80 jawaban benar di quiz. God: 100 jawaban benar di quiz. Find The Secret: Temukan Rahasia. AFK?: AFK Selama 1 Jam 🗿, Diamonds?: Dapatkan item diamond';
+    } else if (message.includes('anothersecret?')) {
+        return addItemToInventory('Secret Coin');
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
     }
