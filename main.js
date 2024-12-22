@@ -12,30 +12,49 @@ let isAfk = false;
 const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
 const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
 
-function addItemToInventory(item) {
-    inventory.push(item);
-    localStorage.setItem('inventory', JSON.stringify(inventory));
+function mineResources() {
+    const resources = [
+        { name: 'Coal', chance: 27 },
+        { name: 'Pyrite', chance: 15 },
+        { name: 'Iron', chance: 15 },
+        { name: 'Copper', chance: 18 },
+        { name: 'Gold', chance: 10 },
+        { name: 'Amethyst', chance: 4 },
+        { name: 'Quartz', chance: 8 },
+        { name: 'Emerald', chance: 2 },
+        { name: 'Diamond', chance: 1 }
+    ];
 
-    let achievementMessage = '';
-    
-    if (item.toLowerCase() === 'diamond' && !achievements.includes('Diamonds?')) {
-    achievements.push('Diamonds?');
-    saveAchievements();
-    achievementMessage += '\nSelamat! Anda mendapatkan achievement: Diamonds?';
+    const roll = Math.random() * 100; // Gulir angka antara 0-100
+    let cumulativeChance = 0;
+
+    for (let resource of resources) {
+        cumulativeChance += resource.chance;
+        if (roll <= cumulativeChance) {
+            addStackableItem(resource.name);
+            return `Anda mendapatkan ${resource.name}!`;
+        }
     }
-    
-    return achievementMessage 
-        ? `Item "${item}" berhasil ditambahkan ke inventori Anda!\n${achievementMessage}`
-        : `Item "${item}" berhasil ditambahkan ke inventori Anda!`;
+    return 'Anda tidak mendapatkan apa-apa. Coba lagi!';
+}
+
+function addStackableItem(item) {
+    const existingItem = inventory.find(i => i.name === item);
+    if (existingItem) {
+        existingItem.count++;
+    } else {
+        inventory.push({ name: item, count: 1 });
+    }
+    localStorage.setItem('inventory', JSON.stringify(inventory));
 }
 
 function displayInventory() {
     if (inventory.length === 0) {
         return 'Inventori Anda kosong.';
     }
-    return `Inventori Anda: ${inventory.join(', ')}`;
-}
-
+    return 'Inventori Anda:\n' +
+        inventory.map(i => `${i.name} x${i.count}`).join('\n');
+}8
 
 function updateLeaderboard() {
     const existingPlayer = leaderboard.find(player => player.name === userName);
@@ -83,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const questions = [
-    { question: "Apa ibu kota Indonesia?", answer: "ikn" },//ibukota indo update🗿
+    { question: "Apa ibu kota Indonesia?", answer: "jakarta" },
     { question: "30×34 berapa?", answer: "1020" },
     { question: "Siapa penemu bola lampu?", answer: "thomas alva edison" },
     { question: "Hewan tercepat di dunia?", answer: "cheetah" },
@@ -159,15 +178,17 @@ function getBotResponse(message) {
         return displayLeaderboard();
     } else if (message.includes('inv')) {
         return displayInventory();
+    } else if (message.includes('mine')) {
+        return mineResources();
     } else if (message.includes('calc')) {
         const expression = message.replace('calc ', '');
         return calculate(expression);
     } else if (message.includes('quiz')) {
         return startQuiz();
     } else if (message.includes('legendary72')) {
-        return addItemToInventory('Diamond');
+        return addStackableItem('Diamond');
     } else if (message.includes('menu')) {
-        return 'Command: redeem code, rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, lihat achievement, ganti nama, info achievement, leaderboard, inv';
+        return 'Command: redeem code, rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, lihat achievement, ganti nama, info achievement, leaderboard, inv, mine';
     } else if (message.includes('lihat achievement')) {
         return displayAchievements();
     } else if (message.includes('rank')) {
@@ -193,15 +214,15 @@ function getBotResponse(message) {
     } else if (message.includes('info server')) {
         return 'Server: Legendary Craft, Dibuat pada tanggal __/__/____, Pembuat Server: Rizkiwibu9696';
     } else if (message.includes('info bot')) {
-        return 'Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72) Untuk Server Legendary Craft, Versi Bot: 1.10.0';
+        return 'Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72) Untuk Server Legendary Craft, Versi Bot: 1.11.0';
     } else if (message.includes('changelog')) {
-        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory';
+        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine';
     } else if (message.includes('support')) {
         return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D https://github.com/DJMoonZHX72 Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
     } else if (message.includes('info achievement')) {
         return 'info: Beginner: 5 jawaban benar di quiz. Expert: 20 jawaban benar di quiz. Advanced: 40 jawaban benar di quiz. Pro: 60 jawaban benar di quiz. Elite: 80 jawaban benar di quiz. God: 100 jawaban benar di quiz. Find The Secret: Temukan Rahasia. AFK?: AFK Selama 1 Jam 🗿, Diamonds?: Dapatkan item diamond';
     } else if (message.includes('anothersecret?')) {
-        return addItemToInventory('Secret Coin');
+        return addStackableItem('Secret Coin');
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
     }
@@ -281,7 +302,7 @@ function calculate(expression) {
 }
 
 function startAfkTimer() {
-    // Hentikan timer lama jika ada
+    // Hentikan timer lama jika ada aktivitas
     if (afkTimer) {
         clearTimeout(afkTimer);
     }
