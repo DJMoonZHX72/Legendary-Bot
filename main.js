@@ -14,8 +14,8 @@ const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
 
 function mineResources() {
     const resources = [
-        { name: 'Coal', chance: 27 },
-        { name: 'Pyrite', chance: 15 },
+        { name: 'Coal', chance: 29 },
+        { name: 'Silver', chance: 13 },
         { name: 'Iron', chance: 15 },
         { name: 'Copper', chance: 18 },
         { name: 'Gold', chance: 10 },
