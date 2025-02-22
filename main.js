@@ -297,7 +297,7 @@ function getBotResponse(message) {
         return craftTools('Diamond Pickaxe')
     } else if (message === 'craft netherite pickaxe') {
         craftTools('Netherite Pickaxe')
-    } else if (message === シ) {
+    } else if (message === 'シ') {
         return autoMine()
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
