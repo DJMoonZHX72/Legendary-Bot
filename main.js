@@ -11,6 +11,114 @@ let afkTimer = null;
 let isAfk = false;
 const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
 const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+let pets = JSON.parse(localStorage.getItem('pets')) || [];
+
+function adoptPet(petName, petType) {
+    const validPets = ['dog', 'cat', 'fox'];
+    if (!validPets.includes(petType)) {
+        return 'Jenis pet tidak valid!';
+    }
+
+    // Cek isi inventory sebelum eksekusi
+    console.log("Inventory sebelum adopt:", JSON.stringify(inventory, null, 2));
+
+    // Cari index Emerald yang cukup
+    const emeraldIndex = inventory.findIndex(item => 
+        item && item.name === 'Emerald' && Number(item.count) >= 3
+    );
+
+    if (emeraldIndex !== -1) {
+        console.log(`Index Emerald ditemukan: ${emeraldIndex}`);
+        console.log(`Emerald sebelum dikurangi: ${inventory[emeraldIndex].count}`);
+
+        // Kurangi Emerald sebanyak 3
+        inventory[emeraldIndex].count -= 3;
+
+        console.log(`Emerald setelah dikurangi: ${inventory[emeraldIndex].count}`);
+
+        // Jika Emerald habis, hapus dari inventory
+        if (inventory[emeraldIndex].count === 0) {
+            inventory.splice(emeraldIndex, 1);
+        }
+
+        // Tambahkan pet baru
+        pets.push({ name: petName, type: petType, level: 1, exp: 0 });
+
+        // Simpan perubahan ke localStorage
+        localStorage.setItem('pets', JSON.stringify(pets));
+        localStorage.setItem('inventory', JSON.stringify(inventory));
+
+        // Cek isi inventory setelah eksekusi
+        console.log("Inventory setelah adopt:", JSON.stringify(inventory, null, 2));
+
+        return `Anda mengadopsi pet ${petType} bernama ${petName}!`;
+    } else {
+        return 'Anda tidak memiliki cukup Emerald untuk mengadopsi pet!';
+    }
+}
+
+function getPetChance(pet) {
+    const baseChances = {
+        dog: 25,
+        cat: 20,
+        fox: 20
+    };
+
+    if (!baseChances[pet.type]) return 0; // Jika tipe pet tidak dikenali, return 0
+
+    let chance = baseChances[pet.type] + (pet.level - 1); // Naik 1% per level
+    return Math.min(chance, 50); // Maksimal 50%
+}
+
+function getPetBonus(resource) {
+    let bonus = '';
+    pets.forEach(pet => {
+        const expRequired = pet.level * 25;
+        let gainedExp = 0;
+        const petChance = getPetChance(pet) / 100; // Ubah ke desimal
+
+        if (pet.type === 'dog' && Math.random() < petChance) {
+            addStackableItem(resource);
+            gainedExp = 1;
+            bonus += `Pet ${pet.name} (Dog) menggandakan ${resource}! `;
+        }
+
+        if (pet.type === 'cat' && Math.random() < petChance) {
+            const findChance = Math.random() * 100;
+            let foundItem = 'Emerald';
+            if (findChance > 70) foundItem = 'Diamond';
+            if (findChance > 99) foundItem = 'Netherite';
+            addStackableItem(foundItem);
+            gainedExp = 1;
+            bonus += `Pet ${pet.name} (Cat) menemukan ${foundItem}! `;
+        }
+
+        if (pet.type === 'fox' && Math.random() < petChance) {
+            const randomItems = ['Gold', 'Iron', 'Coal'];
+            const foundItem = randomItems[Math.floor(Math.random() * randomItems.length)];
+            addStackableItem(foundItem);
+            gainedExp = 1;
+            bonus += `Pet ${pet.name} (Fox) menemukan ${foundItem}! `;
+        }
+
+        pet.exp += gainedExp;
+        if (pet.exp >= expRequired) {
+            pet.level++;
+            pet.exp = 0;
+            bonus += `Pet ${pet.name} naik ke level ${pet.level}!`;
+        }
+    });
+
+    localStorage.setItem('pets', JSON.stringify(pets));
+    return bonus;
+}
+
+function displayPets() {
+    if (pets.length === 0) {
+        return 'Anda belum meliliki pet.'
+    }
+    return pets.map(pet => `Nama: ${pet.name}, Jenis: ${pet.type}, Level: ${pet.level}, Exp: ${pet.exp}`).join(`\n`);
+}
 
 function chopTree() {
     const chance = Math.floor(Math.random() * 2) + 1;
@@ -31,25 +139,9 @@ function mineResources() {
         return 'Anda tidak memiliki Pickaxe! Craft satu terlebih dahulu.';
     }
     
-    if (pickaxe.durability === undefined) {
-        const defaultDurability = {
-            'Wooden Pickaxe': 60,
-            'Stone Pickaxe': 132,
-            'Iron Pickaxe': 251,
-            'Gold Pickaxe': 33,
-            'Diamond Pickaxe': 1562,
-            'Netherite Pickaxe': 2032
-        };
-        pickaxe.durability = defaultDurability[pickaxe.name] || 0;
-    }
-    
     pickaxe.durability--;
-    
     if (pickaxe.durability <= 0) {
-        const index = inventory.findIndex(item => item.name === pickaxe.name);
-        if (index !== -1) {
-            inventory.splice(index, 1);
-        }
+        inventory.splice(inventory.indexOf(pickaxe), 1);
         localStorage.setItem('inventory', JSON.stringify(inventory));
         return 'Pickaxe Anda telah hancur! Anda perlu membuat yang baru.';
     }
@@ -70,18 +162,20 @@ function mineResources() {
     
     const roll = Math.random() * 100;
     let cumulativeChance = 0;
+    let foundResource = '';
     
     for (let resource of resources) {
         cumulativeChance += resource.chance;
         if (roll <= cumulativeChance) {
             addStackableItem(resource.name);
-            localStorage.setItem('inventory', JSON.stringify(inventory));
-            return `Anda mendapatkan ${resource.name}! (Durability Pickaxe: ${pickaxe.durability})`;
+            foundResource = resource.name;
+            break;
         }
     }
     
+    const petBonus = getPetBonus(foundResource);
     localStorage.setItem('inventory', JSON.stringify(inventory));
-    return `Anda tidak mendapatkan apa-apa. (Durability Pickaxe: ${pickaxe.durability})`;
+    return `Anda mendapatkan ${foundResource}! ${petBonus}(Durability Pickaxe: ${pickaxe.durability})`;
 }
 
 
@@ -246,7 +340,7 @@ function getBotResponse(message) {
     } else if (message === 'quiz') {
         return startQuiz();
     } else if (message === 'menu') {
-        return 'Command: rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info achievement, leaderboard, inv, mine, craft (wooden pickaxe/stone pickaxe/iron pickaxe/gold pickaxe/diamond pickaxe/netherite pickaxe), chop a tree';
+        return 'Command: rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info achievement, leaderboard, inv, mine, craft (wooden pickaxe/stone pickaxe/iron pickaxe/gold pickaxe/diamond pickaxe/netherite pickaxe), chop a tree, adopt [nama_pet] [jenis_pet], my pet';
     } else if (message === 'achievement') {
         return displayAchievements();
     } else if (message === 'rank') {
@@ -272,9 +366,9 @@ function getBotResponse(message) {
     } else if (message === 'info server') {
         return 'Server: Legendary Elden Craft, Dibuat pada tanggal __/__/____, Pembuat Server: Rizkiwibu9696';
     } else if (message === 'info bot') {
-        return 'Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72), Versi Bot: 1.13.1';
+        return 'Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72), Versi Bot: 1.14.0';
     } else if (message === 'changelog') {
-        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine, 1.12.0: updated send button design, 1.13.0: bugfix and add crafting tools, 1.13.1: bugfix';
+        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine, 1.12.0: updated send button design, 1.13.0: bugfix and add crafting tools, 1.13.1: bugfix, 1.14.0: added pets';
     } else if (message === 'support') {
         return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D https://github.com/DJMoonZHX72 Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
     } else if (message === 'info achievement') {
@@ -297,6 +391,14 @@ function getBotResponse(message) {
         return craftTools('Netherite Pickaxe')
     } else if (message === 'シ') {
         return autoMine()
+    } else if (message.startsWith('adopt ')) {
+        const args = message.split(' ');
+        if (args.length >= 3) {
+            return adoptPet(args[1], args[2]);
+        }
+        return 'Format perintah salah! Gunakan: adopt [nama_pet] [jenis_pet]'
+    } else if (message === 'my pet') {
+        return displayPets()
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
     }
