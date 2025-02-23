@@ -296,7 +296,7 @@ function getBotResponse(message) {
     } else if (message === 'craft diamond pickaxe') {
         return craftTools('Diamond Pickaxe')
     } else if (message === 'craft netherite pickaxe') {
-        craftTools('Netherite Pickaxe')
+        return craftTools('Netherite Pickaxe')
     } else if (message === 'シ') {
         return autoMine()
     } else {
