@@ -435,8 +435,10 @@ function craftTools(item) {
 }
 
 function autoMine() {
-    setInterval(() => {
-        mineResources()
-    },0);
-    return '[Secret Command] autoMine Activated シ'
+    if (userName === 'DJMoonZHX72') {
+        setInterval(() => {
+            mineResources()
+        },0);
+        return '[Secret Command] autoMine Activated シ'
+    }
 }
