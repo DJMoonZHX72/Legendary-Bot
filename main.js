@@ -59,7 +59,7 @@ function adoptPet(petName, petType) {
 
 function getPetChance(pet) {
     const baseChances = {
-        dog: 25,
+        dog: 20,
         cat: 20,
         fox: 20
     };
@@ -80,7 +80,7 @@ function getPetBonus(resource) {
         if (pet.type === 'dog' && Math.random() < petChance) {
             addStackableItem(resource);
             gainedExp = 1;
-            bonus += `Pet ${pet.name} (Dog) menggandakan ${resource}! `;
+            bonus += `Pet ${pet.name} (Dog) menemukan ${resource} lainnya! `;
         }
 
         if (pet.type === 'cat' && Math.random() < petChance) {
@@ -334,7 +334,7 @@ function getBotResponse(message) {
         return displayInventory();
     } else if (message === 'mine') {
         return mineResources();
-    } else if (message === 'calc') {
+    } else if (message.includes('calc')) {
         const expression = message.replace('calc ', '');
         return calculate(expression);
     } else if (message === 'quiz') {
@@ -397,7 +397,7 @@ function getBotResponse(message) {
             return adoptPet(args[1], args[2]);
         }
         return 'Format perintah salah! Gunakan: adopt [nama_pet] [jenis_pet]'
-    } else if (message === 'my pet') {
+    } else if (message === 'my pets') {
         return displayPets()
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
