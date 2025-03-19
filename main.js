@@ -1,4 +1,6 @@
-console.warn('main.js loaded')
+console.warn('main.js loaded');
+
+import { getNewQuest, checkQuestCompletion } from './quest.js';
 
 const chatbox = document.getElementById('chatbox');
 const userInput = document.getElementById('userInput');
@@ -179,12 +181,12 @@ function mineResources() {
 }
 
 
-function addStackableItem(item) {
+function addStackableItem(item, amount) {
     const existingItem = inventory.find(i => i.name === item);
     if (existingItem) {
-        existingItem.count++;
+        existingItem.count += amount;
     } else {
-        inventory.push({ name: item, count: 1 });
+        inventory.push({ name: item, count: amount });
     }
     localStorage.setItem('inventory', JSON.stringify(inventory));
 }
@@ -399,6 +401,12 @@ function getBotResponse(message) {
         return 'Format perintah salah! Gunakan: adopt [nama_pet] [jenis_pet]'
     } else if (message === 'my pets') {
         return displayPets()
+    } else if (message === 'quest') {
+        if (localStorage.getItem('quest')) {
+            return `Quest Anda saat ini:\n${JSON.stringify(currentQuest, null, 2)}`;
+        } else {
+            return getNewQuest();
+        }
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
     }
