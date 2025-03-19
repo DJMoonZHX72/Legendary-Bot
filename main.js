@@ -1,7 +1,5 @@
 console.warn('main.js loaded');
 
-import { getNewQuest, checkQuestCompletion } from './quest.js';
-
 const chatbox = document.getElementById('chatbox');
 const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
@@ -401,12 +399,6 @@ function getBotResponse(message) {
         return 'Format perintah salah! Gunakan: adopt [nama_pet] [jenis_pet]'
     } else if (message === 'my pets') {
         return displayPets()
-    } else if (message === 'quest') {
-        if (localStorage.getItem('quest')) {
-            return `Quest Anda saat ini:\n${JSON.stringify(currentQuest, null, 2)}`;
-        } else {
-            return getNewQuest();
-        }
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
     }
