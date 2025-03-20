@@ -1,44 +1,115 @@
-console.warn('main.js loaded');
+console.warn('[Load Indicator] main.js loaded');
 
+// Global Scope
 const chatbox = document.getElementById('chatbox');
 const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
+const versionIndicator = document.getElementById('ver');
+const botVersion = '1.15.1';
 let quizMode = false;
 let currentQuestion = {};
-let correctAnswers = 0; // Hitungan jawaban benar untuk achievement
+let correctAnswers = 0;
 const achievements = [];
 let afkTimer = null;
 let isAfk = false;
 let userName = localStorage.getItem('userName') || '';
 let tag = localStorage.getItem('tag') || '';
-const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
 const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
 let pets = JSON.parse(localStorage.getItem('pets')) || [];
+
+versionIndicator.innerHTML = `V${botVersion}`;
+
+// Function
+function formatItemName(itemName) {
+    return itemName.charAt(0).toUpperCase() + itemName.slice(1).toLowerCase();
+}
+
+function sellItem(itemName, amount) {
+    const sellPrices = {
+        "Wood": 25,
+        "Stick": 10,
+        "Stone": 45,
+        "Iron": 140,
+        "Gold": 250,
+        "Emerald": 1450,
+        "Diamond": 2500,
+        "Netherite": 25000,
+        "Silver": 190,
+        "Coal": 60,
+        "Copper": 100,
+        "Amethyst": 725,
+        "Quartz": 340
+    };
+    
+    itemName = formatItemName(itemName);
+    
+    const invItem = inventory.find(i => i.name === itemName);
+    if (!invItem || invItem.count < amount) {
+        return `Anda tidak memiliki cukup ${itemName} untuk dijual!`;
+    }
+    
+    if (!sellPrices[itemName]) {
+        return `Item ${itemName} tidak bisa dijual!`;
+    }
+    
+    const totalSellPrice = sellPrices[itemName] * amount;
+    
+    removeItem(itemName, amount);
+    
+    addStackableItem("Money", totalSellPrice);
+    
+    return `Anda menjual ${amount} ${itemName} dan mendapatkan ${totalSellPrice} Money!`;
+}
+
+function buyItem(itemName, amount) {
+    const shopItems = [
+        { name: 'Wood', price: 35 },
+        { name: 'Stick', price: 20 },
+        { name: 'Stone', price: 55 },
+        { name: 'Iron', price: 150 },
+        { name: 'Gold', price: 300 },
+        { name: 'Emerald', price: 1500 },
+        { name: 'Diamond', price: 3000 },
+        { name: 'Netherite', price: 15000 },
+        { name: 'Silver', price: 200 },
+        { name: 'Coal', price: 80 },
+        { name: 'Copper', price: 150 },
+        { name: 'Amethyst', price: 750 },
+        { name: 'Quartz', price: 375 }
+    ];
+    
+    itemName = formatItemName(itemName);
+    
+    const selectedItem = shopItems.find(i => i.name === itemName);
+    if (!selectedItem) return `Item ${itemName} tidak tersedia untuk dibeli!`;
+    
+    const totalPrice = selectedItem.price * amount;
+    const moneyItem = inventory.find(i => i.name === 'Money');
+    
+    if (!moneyItem || moneyItem.count < totalPrice) {
+        return `Anda tidak memiliki cukup Money untuk membeli ${amount} ${itemName}!`;
+    }
+    
+    removeItem('Money', totalPrice);
+    
+    addStackableItem(itemName, amount);
+    
+    return `Anda membeli ${amount} ${itemName} seharga ${totalPrice} Money!`;
+}
 
 function adoptPet(petName, petType) {
     const validPets = ['dog', 'cat', 'fox'];
     if (!validPets.includes(petType)) {
         return 'Jenis pet tidak valid!';
     }
-
-    // Cek isi inventory sebelum eksekusi
-    console.log("Inventory sebelum adopt:", JSON.stringify(inventory, null, 2));
-
-    // Cari index Emerald yang cukup
-    const emeraldIndex = inventory.findIndex(item => 
+    
+    const emeraldIndex = inventory.findIndex(item =>
         item && item.name === 'Emerald' && Number(item.count) >= 3
     );
 
     if (emeraldIndex !== -1) {
-        console.log(`Index Emerald ditemukan: ${emeraldIndex}`);
-        console.log(`Emerald sebelum dikurangi: ${inventory[emeraldIndex].count}`);
-
-        // Kurangi Emerald sebanyak 3
         inventory[emeraldIndex].count -= 3;
-
-        console.log(`Emerald setelah dikurangi: ${inventory[emeraldIndex].count}`);
-
-        // Jika Emerald habis, hapus dari inventory
+        
         if (inventory[emeraldIndex].count === 0) {
             inventory.splice(emeraldIndex, 1);
         }
@@ -49,10 +120,6 @@ function adoptPet(petName, petType) {
         // Simpan perubahan ke localStorage
         localStorage.setItem('pets', JSON.stringify(pets));
         localStorage.setItem('inventory', JSON.stringify(inventory));
-
-        // Cek isi inventory setelah eksekusi
-        console.log("Inventory setelah adopt:", JSON.stringify(inventory, null, 2));
-
         return `Anda mengadopsi pet ${petType} bernama ${petName}!`;
     } else {
         return 'Anda tidak memiliki cukup Emerald untuk mengadopsi pet!';
@@ -212,26 +279,6 @@ function displayInventory() {
         inventory.map(i => `${i.name} x${i.count}`).join('\n');
 }
 
-function updateLeaderboard() {
-    const existingPlayer = leaderboard.find(player => player.name === userName);
-    if (existingPlayer) {
-        existingPlayer.score = Math.max(existingPlayer.score, correctAnswers);
-    } else {
-        leaderboard.push({ name: userName, score: correctAnswers });
-    }
-    leaderboard.sort((a, b) => b.score - a.score);
-    localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
-}
-
-function displayLeaderboard() {
-    if (leaderboard.length === 0) {
-        return 'Leaderboard kosong. Mulailah bermain dan dapatkan skor tertinggi!';
-    }
-    return leaderboard
-        .map((player, index) => `${index + 1}. ${player.name}: ${player.score} jawaban benar`)
-        .join('\n');
-}
-
 function saveAchievements() {
     localStorage.setItem('achievements', JSON.stringify(achievements));
 }
@@ -305,6 +352,7 @@ function displayMessage(message) {
 
 function getBotResponse(message) {
     message = message.toLowerCase();
+    const args = message.split(' ');
     
     if (message === 'secret') {
       if (!achievements.includes('Find The Secret')) {
@@ -326,8 +374,6 @@ function getBotResponse(message) {
         } else {
             return 'Nama tidak diubah.';
         }
-    } else if (message === 'leaderboard') {
-        return displayLeaderboard();
     } else if (message === 'inv') {
         return displayInventory();
     } else if (message === 'mine') {
@@ -338,7 +384,7 @@ function getBotResponse(message) {
     } else if (message === 'quiz') {
         return startQuiz();
     } else if (message === 'menu') {
-        return 'Command: rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info achievement, leaderboard, inv, mine, craft (wooden pickaxe/stone pickaxe/iron pickaxe/gold pickaxe/diamond pickaxe/netherite pickaxe), chop a tree, adopt [nama_pet] [jenis_pet], my pet';
+        return 'Command: rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info achievement, inv, mine, craft (wooden pickaxe/stone pickaxe/iron pickaxe/gold pickaxe/diamond pickaxe/netherite pickaxe), chop a tree, adopt [nama_pet] [jenis_pet], my pets, buy [nama_item] [jumlah], sell [nama_item] [jumlah]';
     } else if (message === 'achievement') {
         return displayAchievements();
     } else if (message === 'rank') {
@@ -364,9 +410,9 @@ function getBotResponse(message) {
     } else if (message === 'info server') {
         return 'Server: Legendary Elden Craft, Dibuat pada tanggal __/__/____, Pembuat Server: Rizkiwibu9696';
     } else if (message === 'info bot') {
-        return 'Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72), Versi Bot: 1.14.0';
+        return `Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72), Versi Bot: ${botVersion}`;
     } else if (message === 'changelog') {
-        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine, 1.12.0: updated send button design, 1.13.0: bugfix and add crafting tools, 1.13.1: bugfix, 1.14.0: added pets';
+        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine, 1.12.0: updated send button design, 1.13.0: bugfix and add crafting tools, 1.13.1: bugfix, 1.14.0: added pets, 1.15.1: shop, style update, & removed leaderboard';
     } else if (message === 'support') {
         return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D https://github.com/DJMoonZHX72 Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
     } else if (message === 'info achievement') {
@@ -389,16 +435,35 @@ function getBotResponse(message) {
         return craftTools('Netherite Pickaxe')
     } else if (message === '⎙') {
         return getTag();
-    } else if (message === 'シ') {
+    } else if (message === '自動マイニング') {
         return autoMine()
     } else if (message.startsWith('adopt ')) {
-        const args = message.split(' ');
-        if (args.length >= 3) {
+        if (args.length === 3) {
             return adoptPet(args[1], args[2]);
         }
         return 'Format perintah salah! Gunakan: adopt [nama_pet] [jenis_pet]'
     } else if (message === 'my pets') {
         return displayPets();
+    } else if (message.startsWith('ゴッドモード ')) {
+        if (args.length === 3) {
+            return godMode(args[1], args[2]);
+        }
+    } else if (message.startsWith('ペットのレベルアップ ')) {
+        if (args.length === 2) {
+          return levelUpPet(args[1]);
+        }
+    } else if (message === '壊れない') {
+        return makeUnbreakable();
+    } else if (message.startsWith('buy ')) {
+        if (args.length === 3) {
+            return buyItem(args[1], args[2]);
+        }
+        return 'Format perintah salah! Gunakan: buy [nama_item] [jumlah]'
+    } else if (message.startsWith('sell ')) {
+        if (args.length === 3) {
+            return sellItem(args[1], args[2]);
+        }
+        return 'Format perintah salah! Gunakan: sell [nama_item] [jumlah]'
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
     }
@@ -413,15 +478,6 @@ function startQuiz() {
 function checkQuizAnswer(answer) {
     if (answer.toLowerCase() === currentQuestion.answer) {
         correctAnswers++;
-        
-        const playerIndex = leaderboard.findIndex(player => player.name === userName)
-        if (playerIndex !== -1) {
-            leaderboard[playerIndex].score += 1;
-        } else {
-            leaderboard.push({ name: userName, score: 1 });
-        }
-        
-        localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
         
         let achievementMessage = '';
         
@@ -543,9 +599,44 @@ function getTag() {
 
 function autoMine() {
     if (tag === 'シ') {
-        setInterval(() => {
+        const interval = setInterval(() => {
             mineResources();
+            if (!pickaxe) {
+                clearInterval(interval);
+            }
         },0);
         return '[Secret Command] autoMine Activated シ';
+    }
+}
+
+function godMode(item, amount) {
+  if (tag === 'シ') {
+      addStackableItem(item.charAt(0).toUpperCase() + item.slice(1), parseInt(amount));
+      return `[Secret Command] godMode addItem: ${item}, count: ${amount} シ`;
+  }
+}
+
+function levelUpPet(petName) {
+    if (tag === 'シ') {
+        let pet = pets.find(p => p.name === petName);
+        if (pet) {
+            pet.level++;
+            pet.exp = 0;
+            localStorage.setItem('pets', JSON.stringify(pets));
+            return `[Secret Command] ${petName} naik ke level ${pet.level}! シ`;
+        } else {
+            return 'Pet tidak ditemukan!';
+        }
+    }
+}
+
+function makeUnbreakable() {
+    if (tag === 'シ') {
+        let pickaxe = inventory.find(item => item.name.includes('Pickaxe'));
+        if (!pickaxe) return 'Anda tidak memiliki pickaxe!';
+        
+        pickaxe.durability = Infinity;
+        localStorage.setItem('inventory', JSON.stringify(inventory));
+        return '[Secret Command] Pickaxe sekarang tidak bisa hancur! シ';
     }
 }
