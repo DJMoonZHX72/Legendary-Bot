@@ -12,6 +12,7 @@
     }
     #chatbox {
         border: 1px solid #ecf0f1;
+        border-radius: 20px;
         padding: 10px;
         margin: 20px auto;
         width: 300px;
@@ -23,6 +24,7 @@
         width: 300px;
         padding: 10px;
         background-color: #FFFFFF90;
+        border-radius: 10px;
     }
     #sendButton {
         padding: 10px 20px;
@@ -131,11 +133,13 @@
         height: 200px;
         overflow-y: scroll;
         background-color: #00000000;
+        border-radius: 20px;
     }
     #userInput {
         width: 300px;
         padding: 10px;
         background-color: #FFFFFF90;
+        border-radius: 10px;
     }
     #sendButton {
         padding: 10px 20px;
