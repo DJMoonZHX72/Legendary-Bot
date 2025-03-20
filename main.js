@@ -9,6 +9,8 @@ let correctAnswers = 0; // Hitungan jawaban benar untuk achievement
 const achievements = [];
 let afkTimer = null;
 let isAfk = false;
+let userName = localStorage.getItem('userName') || '';
+let tag = localStorage.getItem('tag') || '';
 const leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
 const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
 let pets = JSON.parse(localStorage.getItem('pets')) || [];
@@ -78,7 +80,7 @@ function getPetBonus(resource) {
         const petChance = getPetChance(pet) / 100; // Ubah ke desimal
 
         if (pet.type === 'dog' && Math.random() < petChance) {
-            addStackableItem(resource);
+            addStackableItem(resource, 1);
             gainedExp = 1;
             bonus += `Pet ${pet.name} (Dog) menemukan ${resource} lainnya! `;
         }
@@ -88,7 +90,7 @@ function getPetBonus(resource) {
             let foundItem = 'Emerald';
             if (findChance > 70) foundItem = 'Diamond';
             if (findChance > 99) foundItem = 'Netherite';
-            addStackableItem(foundItem);
+            addStackableItem(foundItem, 1);
             gainedExp = 1;
             bonus += `Pet ${pet.name} (Cat) menemukan ${foundItem}! `;
         }
@@ -96,7 +98,7 @@ function getPetBonus(resource) {
         if (pet.type === 'fox' && Math.random() < petChance) {
             const randomItems = ['Gold', 'Iron', 'Coal'];
             const foundItem = randomItems[Math.floor(Math.random() * randomItems.length)];
-            addStackableItem(foundItem);
+            addStackableItem(foundItem, 1);
             gainedExp = 1;
             bonus += `Pet ${pet.name} (Fox) menemukan ${foundItem}! `;
         }
@@ -123,7 +125,7 @@ function displayPets() {
 function chopTree() {
     const chance = Math.floor(Math.random() * 2) + 1;
     let item = chance === 1 ? 'Wood' : 'Stick';
-    addStackableItem(item);
+    addStackableItem(item, 1);
     return `Anda mendapatkan ${item}!`;
 }
 
@@ -167,7 +169,7 @@ function mineResources() {
     for (let resource of resources) {
         cumulativeChance += resource.chance;
         if (roll <= cumulativeChance) {
-            addStackableItem(resource.name);
+            addStackableItem(resource.name, 1);
             foundResource = resource.name;
             break;
         }
@@ -233,10 +235,6 @@ function displayLeaderboard() {
 function saveAchievements() {
     localStorage.setItem('achievements', JSON.stringify(achievements));
 }
-
-
-// Variabel untuk menyimpan nama pengguna
-let userName = localStorage.getItem('userName') || '';
 
 document.addEventListener('DOMContentLoaded', () => {
     startAfkTimer();
@@ -374,7 +372,7 @@ function getBotResponse(message) {
     } else if (message === 'info achievement') {
         return 'info: Beginner: 5 jawaban benar di quiz. Expert: 20 jawaban benar di quiz. Advanced: 40 jawaban benar di quiz. Pro: 60 jawaban benar di quiz. Elite: 80 jawaban benar di quiz. God: 100 jawaban benar di quiz. Find The Secret: Temukan Rahasia. AFK?: AFK Selama 1 Jam 🗿, Diamonds?: Dapatkan item diamond';
     } else if (message === 'anothersecret?') {
-        return addStackableItem('Secret Coin');
+        return addStackableItem('Secret Coin', 1);
     } else if (message === 'chop a tree') {
         return chopTree()
     } else if (message === 'craft wooden pickaxe') {
@@ -389,6 +387,8 @@ function getBotResponse(message) {
         return craftTools('Diamond Pickaxe')
     } else if (message === 'craft netherite pickaxe') {
         return craftTools('Netherite Pickaxe')
+    } else if (message === '⎙') {
+        return getTag();
     } else if (message === 'シ') {
         return autoMine()
     } else if (message.startsWith('adopt ')) {
@@ -398,7 +398,7 @@ function getBotResponse(message) {
         }
         return 'Format perintah salah! Gunakan: adopt [nama_pet] [jenis_pet]'
     } else if (message === 'my pets') {
-        return displayPets()
+        return displayPets();
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
     }
@@ -536,11 +536,16 @@ function craftTools(item) {
     return `Anda telah berhasil membuat ${selectedRecipe.item} dengan durability ${selectedRecipe.durability}!`;
 }
 
+function getTag() {
+    let tag = prompt('Masukkan tag');
+    localStorage.setItem('tag', tag);
+}
+
 function autoMine() {
-    if (userName === 'DJMoonZHX72') {
+    if (tag === 'シ') {
         setInterval(() => {
-            mineResources()
+            mineResources();
         },0);
-        return '[Secret Command] autoMine Activated シ'
+        return '[Secret Command] autoMine Activated シ';
     }
 }
