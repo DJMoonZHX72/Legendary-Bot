@@ -4,8 +4,11 @@ console.warn('[Load Indicator] main.js loaded');
 const chatbox = document.getElementById('chatbox');
 const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
+const questMessage = document.getElementById("questMessage");
 const versionIndicator = document.getElementById('ver');
-const botVersion = '1.15.1';
+const title = document.getElementById('title');
+const questList = document.getElementById("questList");
+const botVersion = '1.16.0';
 let quizMode = false;
 let currentQuestion = {};
 let correctAnswers = 0;
@@ -16,10 +19,163 @@ let userName = localStorage.getItem('userName') || '';
 let tag = localStorage.getItem('tag') || '';
 const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
 let pets = JSON.parse(localStorage.getItem('pets')) || [];
+const quests = JSON.parse(localStorage.getItem('quests')) || [];
 
 versionIndicator.innerHTML = `V${botVersion}`;
+title.innerHTML = `DJMoonZHX72 - Legendary Bot ${botVersion}`
 
 // Function
+function showQuestProgress() {
+    if (quests.length === 0) {
+        return "Anda belum mengambil quest.";
+    }
+
+    return quests.map(q => {
+        const progressList = q.objectives.map(obj => {
+            const progress = q.progress[obj.item || obj.action] || 0;
+            return `- ${obj.item || obj.action}: ${progress}/${obj.required}`;
+        }).join("\n");
+
+        return `📜 **${q.name}**\n${q.description}\n🎯 Progres:\n${progressList}\n`;
+    }).join("\n");
+}
+
+function displayQuests() {
+    const quests = [
+        {
+            name: "Gathering Resources",
+            description: "Kumpulkan berbagai sumber daya untuk memenuhi kebutuhan crafting.",
+            objectives: [
+                { item: "Wood", required: 10 },
+                { item: "Stone", required: 5 },
+                { item: "Iron", required: 3 }
+            ],
+            rewards: [
+                { item: "Money", amount: 100 },
+                { item: "Iron Pickaxe", amount: 1 }
+            ]
+        },
+        {
+            name: "Pet Adventure",
+            description: "Biarkan pet-mu membantu dalam petualangan!",
+            objectives: [
+                { action: "adoptPet", required: 1 },
+                { action: "petFindItem", required: 3 }
+            ],
+            rewards: [
+                { item: "Money", amount: 150 },
+                { item: "Emerald", amount: 1 }
+            ]
+        }
+    ];
+
+    return quests;
+}
+
+function showQuests() {
+    const availableQuests = displayQuests();
+    
+    const formattedQuests = availableQuests.map(q => 
+        `📜--${q.name }-- \n ${q.description }\n Objectives: \n ${q.objectives.map(obj => `- ${obj.item || obj.action}: ${obj.required}`).join("\n")}\n🏆 Rewards:\n${q.rewards.map(reward => `- ${reward.item}: ${reward.amount}`).join("\n")}`
+    ).join("\n\n");
+
+    return `${formattedQuests}`;
+}
+
+function updateQuestProgress(action, itemName, amount = 1) {
+    let progressMessage = "";
+    
+    quests.forEach(quest => {
+        quest.objectives.forEach(obj => {
+            if ((obj.item && obj.item === itemName) || (obj.action && obj.action === action)) {
+                quest.progress[obj.item || obj.action] = (quest.progress[obj.item || obj.action] || 0) + amount;
+            }
+        });
+        
+        if (isQuestComplete(quest)) {
+            let completionMessage = completeQuest(quest);
+            progressMessage += completionMessage + "\n";
+        }
+    });
+    
+    localStorage.setItem('quests', JSON.stringify(quests));
+    getQuestProgress();
+    
+    if (progressMessage) {
+        sendMessage(progressMessage);
+    }
+    
+    return progressMessage || "Tidak ada progres yang diperbarui.";
+}
+
+function takeQuest(questName) {
+    const availableQuests = displayQuests();
+    const quest = availableQuests.find(q => q.name.toLowerCase() === questName.toLowerCase());
+    
+    if (!quest) return "Quest tidak ditemukan!";
+    
+    if (quests.find(q => q.name === quest.name)) return "Anda sudah mengambil quest ini!";
+    
+    quests.push({ ...quest, progress: {} });
+    localStorage.setItem('quests', JSON.stringify(quests));
+    getQuestProgress();
+    
+    return `Anda telah mengambil quest: ${quest.name}!`;
+}
+
+function isQuestComplete(quest) {
+    return quest.objectives.every(obj => (quest.progress[obj.item || obj.action] || 0) >= obj.required);
+}
+
+function showCompletionMessage(message) {
+    if (!questMessage) return;
+
+    questMessage.textContent = message;
+    questMessage.style.display = "block";
+
+    setTimeout(() => {
+        questMessage.style.display = "none";
+    }, 3000);
+}
+
+function completeQuest(quest) {
+    let rewardText = `Selamat! Anda menyelesaikan quest "${quest.name}" dan mendapatkan hadiah:\n`;
+    
+    if (!quest.rewards || quest.rewards.length === 0) {
+        rewardText += "(Tidak ada reward 😢)";
+    } else {
+        quest.rewards.forEach(reward => {
+            addStackableItem(reward.item, reward.amount);
+            rewardText += `- ${reward.item}: ${reward.amount}\n`;
+        });
+    }
+    
+    showCompletionMessage(rewardText)
+    
+    quests.splice(quests.indexOf(quest), 1);
+    localStorage.setItem('quests', JSON.stringify(quests));
+    
+    return rewardText;
+}
+
+function getQuestProgress() {
+    if (quests.length === 0) {
+        questList.innerHTML = "Belum ada quest yang diambil.";
+        return;
+    }
+
+    let questText = quests.map(q => {
+        const progressList = q.objectives.map(obj => {
+            const progress = q.progress[obj.item || obj.action] || 0;
+            return `- ${obj.item || obj.action}: ${progress}/${obj.required}`;
+        }).join("<br>");
+
+        return `<b>${q.name}</b><br>${q.description}<br>🎯 Progress:<br>${progressList}<br>`;
+    }).join("<br>");
+
+    questList.innerHTML = questText;
+}
+
 function formatItemName(itemName) {
     return itemName.charAt(0).toUpperCase() + itemName.slice(1).toLowerCase();
 }
@@ -113,11 +269,11 @@ function adoptPet(petName, petType) {
         if (inventory[emeraldIndex].count === 0) {
             inventory.splice(emeraldIndex, 1);
         }
-
-        // Tambahkan pet baru
+        
         pets.push({ name: petName, type: petType, level: 1, exp: 0 });
-
-        // Simpan perubahan ke localStorage
+        
+        updateQuestProgress("adoptPet", null, 1);
+        
         localStorage.setItem('pets', JSON.stringify(pets));
         localStorage.setItem('inventory', JSON.stringify(inventory));
         return `Anda mengadopsi pet ${petType} bernama ${petName}!`;
@@ -130,13 +286,13 @@ function getPetChance(pet) {
     const baseChances = {
         dog: 20,
         cat: 20,
-        fox: 20
+        fox: 20,
     };
 
-    if (!baseChances[pet.type]) return 0; // Jika tipe pet tidak dikenali, return 0
+    if (!baseChances[pet.type]) return 0;
 
-    let chance = baseChances[pet.type] + (pet.level - 1); // Naik 1% per level
-    return Math.min(chance, 50); // Maksimal 50%
+    let chance = baseChances[pet.type] + (pet.level - 1);
+    return Math.min(chance, 50);
 }
 
 function getPetBonus(resource) {
@@ -144,12 +300,13 @@ function getPetBonus(resource) {
     pets.forEach(pet => {
         const expRequired = pet.level * 25;
         let gainedExp = 0;
-        const petChance = getPetChance(pet) / 100; // Ubah ke desimal
+        const petChance = getPetChance(pet) / 100;
 
         if (pet.type === 'dog' && Math.random() < petChance) {
             addStackableItem(resource, 1);
             gainedExp = 1;
-            bonus += `Pet ${pet.name} (Dog) menemukan ${resource} lainnya! `;
+            updateQuestProgress("petFindItem", null, 1);
+            bonus += `Pet ${pet.name} (🐶 Dog) menemukan ${resource} lainnya! `;
         }
 
         if (pet.type === 'cat' && Math.random() < petChance) {
@@ -159,7 +316,8 @@ function getPetBonus(resource) {
             if (findChance > 99) foundItem = 'Netherite';
             addStackableItem(foundItem, 1);
             gainedExp = 1;
-            bonus += `Pet ${pet.name} (Cat) menemukan ${foundItem}! `;
+            updateQuestProgress("petFindItem", null, 1);
+            bonus += `Pet ${pet.name} ( 🐱 Cat) menemukan ${foundItem}! `;
         }
 
         if (pet.type === 'fox' && Math.random() < petChance) {
@@ -167,7 +325,8 @@ function getPetBonus(resource) {
             const foundItem = randomItems[Math.floor(Math.random() * randomItems.length)];
             addStackableItem(foundItem, 1);
             gainedExp = 1;
-            bonus += `Pet ${pet.name} (Fox) menemukan ${foundItem}! `;
+            updateQuestProgress("petFindItem", null, 1);
+            bonus += `Pet ${pet.name} (🦊 Fox) menemukan ${foundItem}! `;
         }
 
         pet.exp += gainedExp;
@@ -192,7 +351,11 @@ function displayPets() {
 function chopTree() {
     const chance = Math.floor(Math.random() * 2) + 1;
     let item = chance === 1 ? 'Wood' : 'Stick';
+    
     addStackableItem(item, 1);
+    
+    updateQuestProgress("chopTree", item);
+    
     return `Anda mendapatkan ${item}!`;
 }
 
@@ -238,6 +401,7 @@ function mineResources() {
         if (roll <= cumulativeChance) {
             addStackableItem(resource.name, 1);
             foundResource = resource.name;
+            updateQuestProgress("mine", foundResource);
             break;
         }
     }
@@ -284,6 +448,7 @@ function saveAchievements() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    getQuestProgress();
     startAfkTimer();
     if (!userName) {
         userName = prompt('Halo! Siapa nama Anda?');
@@ -329,7 +494,7 @@ function sendMessage() {
     const userMessage = userInput.value;
     if (userMessage.trim() === '') return;
 
-    displayMessage('Anda: ' + userMessage);
+    displayMessage(`${userName}: ${userMessage}`);
     userInput.value = '';
 
     let botResponse;
@@ -339,13 +504,13 @@ function sendMessage() {
         botResponse = getBotResponse(userMessage);
     }
 
-    displayMessage('Bot: ' + botResponse);
+    displayMessage(`Bot: ${botResponse}`);
 }
 
 function displayMessage(message) {
     const messageElement = document.createElement('div');
     messageElement.textContent = message;
-    messageElement.classList.add('fade-in'); // Tambahkan kelas
+    messageElement.classList.add('fade-in');
     chatbox.appendChild(messageElement);
     chatbox.scrollTop = chatbox.scrollHeight;
 }
@@ -384,7 +549,7 @@ function getBotResponse(message) {
     } else if (message === 'quiz') {
         return startQuiz();
     } else if (message === 'menu') {
-        return 'Command: rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info achievement, inv, mine, craft (wooden pickaxe/stone pickaxe/iron pickaxe/gold pickaxe/diamond pickaxe/netherite pickaxe), chop a tree, adopt [nama_pet] [jenis_pet], my pets, buy [nama_item] [jumlah], sell [nama_item] [jumlah]';
+        return 'Command: rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info achievement, inv, mine, craft (wooden pickaxe/stone pickaxe/iron pickaxe/gold pickaxe/diamond pickaxe/netherite pickaxe), chop a tree, adopt [nama_pet] [jenis_pet], my pets, buy [nama_item] [jumlah], sell [nama_item] [jumlah], quests, take quest [nama_quest], my quests, quest progress, clear chat';
     } else if (message === 'achievement') {
         return displayAchievements();
     } else if (message === 'rank') {
@@ -412,27 +577,27 @@ function getBotResponse(message) {
     } else if (message === 'info bot') {
         return `Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72), Versi Bot: ${botVersion}`;
     } else if (message === 'changelog') {
-        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine, 1.12.0: updated send button design, 1.13.0: bugfix and add crafting tools, 1.13.1: bugfix, 1.14.0: added pets, 1.15.1: shop, style update, & removed leaderboard';
+        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine, 1.12.0: updated send button design, 1.13.0: bugfix and add crafting tools, 1.13.1: bugfix, 1.14.0: added pets, 1.15.1: shop, style update, & removed leaderboard, 1.16.0: added quest, code efficiency';
     } else if (message === 'support') {
         return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D https://github.com/DJMoonZHX72 Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
     } else if (message === 'info achievement') {
-        return 'info: Beginner: 5 jawaban benar di quiz. Expert: 20 jawaban benar di quiz. Advanced: 40 jawaban benar di quiz. Pro: 60 jawaban benar di quiz. Elite: 80 jawaban benar di quiz. God: 100 jawaban benar di quiz. Find The Secret: Temukan Rahasia. AFK?: AFK Selama 1 Jam 🗿, Diamonds?: Dapatkan item diamond';
+        return 'info: Beginner: 5 jawaban benar di quiz. Expert: 20 jawaban benar di quiz. Advanced: 40 jawaban benar di quiz. Pro: 60 jawaban benar di quiz. Elite: 80 jawaban benar di quiz. God: 100 jawaban benar di quiz. Find The Secret: Temukan Rahasia. AFK?: diam di chatbot ini tanpa melakukan apapun selama 1 jam 🗿, Diamonds?: Dapatkan diamond';
     } else if (message === 'anothersecret?') {
         return addStackableItem('Secret Coin', 1);
     } else if (message === 'chop a tree') {
         return chopTree()
     } else if (message === 'craft wooden pickaxe') {
-        return craftTools('Wooden Pickaxe')
+        return craftTools('Wooden Pickaxe');
     } else if (message === 'craft stone pickaxe') {
-        return craftTools('Stone Pickaxe')
+        return craftTools('Stone Pickaxe');
     } else if (message === 'craft iron pickaxe') {
-        return craftTools('Iron Pickaxe')
+        return craftTools('Iron Pickaxe');
     } else if (message === 'craft gold pickaxe') {
-        return craftTools('Gold Pickaxe')
+        return craftTools('Gold Pickaxe');
     } else if (message === 'craft diamond pickaxe') {
-        return craftTools('Diamond Pickaxe')
+        return craftTools('Diamond Pickaxe');
     } else if (message === 'craft netherite pickaxe') {
-        return craftTools('Netherite Pickaxe')
+        return craftTools('Netherite Pickaxe');
     } else if (message === '⎙') {
         return getTag();
     } else if (message === '自動マイニング') {
@@ -454,6 +619,11 @@ function getBotResponse(message) {
         }
     } else if (message === '壊れない') {
         return makeUnbreakable();
+    } else if (message === 'オートチョップ') {
+        return autoChop();
+    } else if (message.startsWith('ペット削除 ')) {
+        const petName = message.replace('ペット削除 ', '');
+        return removePet(petName);
     } else if (message.startsWith('buy ')) {
         if (args.length === 3) {
             return buyItem(args[1], args[2]);
@@ -464,6 +634,18 @@ function getBotResponse(message) {
             return sellItem(args[1], args[2]);
         }
         return 'Format perintah salah! Gunakan: sell [nama_item] [jumlah]'
+    } else if (message === "quests") {
+        return showQuests();
+    } else if (message.startsWith("take quest ")) {
+        return takeQuest(message.replace("take quest ", ""));
+    } else if (message === "my quests") {
+        return quests.length ? quests.map(q => `${q.name} - ${q.progress ? "Sedang dikerjakan" : "Belum dimulai"}`).join("\n") : "Anda belum mengambil quest.";
+    } else if (message === "quest progress") {
+        let progress = showQuestProgress();
+        return progress;
+    } else if (message === 'clear chat') {
+        chatbox.innerHTML = '';
+        alert('Chat berhasil dibersihkan!');
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
     }
@@ -534,29 +716,26 @@ function calculate(expression) {
 }
 
 function startAfkTimer() {
-    // Hentikan timer lama jika ada aktivitas
     if (afkTimer) {
         clearTimeout(afkTimer);
     }
-
-    // Mulai timer AFK
+    
     afkTimer = setTimeout(() => {
         isAfk = true;
-
-        // Tambahkan achievement jika belum ada
+        
         if (!achievements.includes('AFK?')) {
             achievements.push('AFK?');
             saveAchievements();
             displayMessage('Bot: Selamat! Anda mendapatkan achievement: AFK?.');
         }
-    }, 3600000); // 3600 detik
+    }, 3600000);
 }
 
 function resetAfkTimer() {
     if (isAfk) {
         isAfk = false;
     }
-    startAfkTimer(); // Reset timer saat ada aktivitas
+    startAfkTimer();
 }
 
 function craftTools(item) {
@@ -599,13 +778,16 @@ function getTag() {
 
 function autoMine() {
     if (tag === 'シ') {
+        const pickaxes = ['Netherite Pickaxe', 'Diamond Pickaxe', 'Gold Pickaxe', 'Iron Pickaxe', 'Stone Pickaxe', 'Wooden Pickaxe'];
+        const pickaxe = inventory.find(item => pickaxes.includes(item.name));
+        
         const interval = setInterval(() => {
             mineResources();
             if (!pickaxe) {
                 clearInterval(interval);
             }
         },0);
-        return '[Secret Command] autoMine Activated シ';
+        return '[Secret Command] autoMine Aktif シ';
     }
 }
 
@@ -638,5 +820,30 @@ function makeUnbreakable() {
         pickaxe.durability = Infinity;
         localStorage.setItem('inventory', JSON.stringify(inventory));
         return '[Secret Command] Pickaxe sekarang tidak bisa hancur! シ';
+    }
+}
+
+function autoChop() {
+    if (tag === 'シ') {
+        setInterval(() => {
+            chopTree();
+        },0);
+        return '[Secret Command] autoChop Aktif シ'
+    }
+}
+
+function removePet(petName) {
+    if (tag === 'シ') {
+        const petIndex = pets.findIndex(p => p.name === petName);
+        
+        if (petIndex !== -1) {
+            pets.splice(petIndex, 1);
+            localStorage.setItem('pets', JSON.stringify(pets));
+            return `[Secret Command] Pet "${petName}" telah dihapus! シ`;
+        } else {
+            return 'Pet tidak ditemukan!';
+        }
+    } else {
+        return 'Anda tidak memiliki akses ke perintah ini!';
     }
 }
