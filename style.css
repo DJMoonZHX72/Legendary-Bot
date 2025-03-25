@@ -1,7 +1,7 @@
 @media screen and (max-width: 768px) {
     body {
         font-family: sans-serif;
-        background-image: url('images/background(mobile).png');
+        background-image: url('./background(mobile).png');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -133,7 +133,7 @@
 @media screen and (min-width: 768px) {
     body {
         font-family: sans-serif;
-        background-image: url('images/background(pc).png');
+        background-image: url('./background(pc).png');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
