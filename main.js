@@ -1,14 +1,19 @@
-console.warn('[Load Indicator] main.js loaded');
+/*****************************************
++* (c) DJMoonZHX72. All rights reserved. *
++*  (c) Crystal24. All rights reserved.  *
++*****************************************/
+
+console.warn('main.js loaded');
 
 // Global Scope
 const chatbox = document.getElementById('chatbox');
 const userInput = document.getElementById('userInput');
 const sendButton = document.getElementById('sendButton');
-const questMessage = document.getElementById("questMessage");
+const questMessage = document.getElementById('questMessage');
 const versionIndicator = document.getElementById('ver');
 const title = document.getElementById('title');
-const questList = document.getElementById("questList");
-const botVersion = '1.16.0';
+const questList = document.getElementById('questList');
+const botVersion = '1.17.1';
 let quizMode = false;
 let currentQuestion = {};
 let correctAnswers = 0;
@@ -20,51 +25,587 @@ let tag = localStorage.getItem('tag') || '';
 const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
 let pets = JSON.parse(localStorage.getItem('pets')) || [];
 const quests = JSON.parse(localStorage.getItem('quests')) || [];
+let player = {
+    name: userName,
+    hp: 100,
+    maxHp: 100,
+    attack: 10,
+    defense: 5,
+    weapon: null,
+};
 
+const enemies = [
+    { name: 'Zombie', hp: 50, maxHp: 50, attack: 8, defense: 2, xp: 10, money: 50, rewards: [{ item: 'Iron', count: 1 }] },
+    { name: 'Skeleton', hp: 60, maxHp: 60, attack: 10, defense: 3, xp: 15, money: 75, rewards: [{ item: 'Emerald', count: 1 }] },
+    { name: 'Enderman', hp: 100, maxHp: 80, attack: 12, defense: 4, xp: 25, money: 150, rewards: [{ item: 'Diamond', count: 1 }] }
+];
+let currentEnemy = null;
+let inBattle = false;
+let enemyHealInterval;
+const places = [
+    {
+        name: 'Forest',
+        requirement: '',
+        challenge: 'Anda tersesat',
+        loot: [
+            { item: 'Wood', chance: 30 },
+            { item: 'Leaf', chance: 30 },
+            { item: 'Leather', chance: 15 },
+            { item: 'Apple', chance: 10 },
+            { item: 'Rope', chance: 10 },
+            { item: 'Water', chance: 5 }
+        ]
+    },
+    {
+        name: 'Mountain',
+        requirement: 'Rope',
+        challenge: 'Longsor & jatuh',
+        loot: [
+            { item: 'Stone', chance: 50 },
+            { item: 'Coal', chance: 30 },
+            { item: 'Iron', chance: 15 },
+            { item: 'Emerald', chance: 5 }
+        ]
+    },
+    {
+        name: 'Cave',
+        requirement: 'Torch',
+        challenge: 'Monster & runtuhan',
+        loot: [
+            { item: 'Stone', chance: 40 },
+            { item: 'Iron', chance: 30 },
+            { item: 'Gold', chance: 23 },
+            { item: 'Diamond', chance: 5 },
+            { item: 'Netherite', chance: 2 }
+        ]
+    },
+    {
+        name: 'Desert',
+        requirement: 'Water',
+        challenge: 'Cuaca ekstrem',
+        loot: [
+            { item: 'Sand', chance: 50 },
+            { item: 'Cactus', chance: 25 },
+            { item: 'Bone', chance: 20 },
+            { item: 'Chest', chance: 5 }
+        ]
+    },
+    {
+        name: 'Ocean',
+        requirement: 'Boat',
+        challenge: 'Hiu & arus',
+        loot: [
+            { item: 'Fish', chance: 50 },
+            { item: 'Seaweed', chance: 30 },
+            { item: 'Pearl', chance: 15 },
+            { item: 'Treasure', chance: 5 }
+        ]
+    },
+    {
+        name: 'Swamp',
+        requirement: '',
+        challenge: 'Lumpur hisap',
+        loot: [
+            { item: 'Mud', chance: 50 },
+            { item: 'Frog', chance: 25 },
+            { item: 'Lilypad', chance: 20 },
+            { item: 'Potion', chance: 5 }
+        ]
+    },
+    {
+        name: 'Abandoned City',
+        requirement: 'weapon',
+        challenge: 'Zombie & perangkap',
+        loot: [
+            { item: 'Junk', chance: 40 },
+            { item: 'Old Book', chance: 30 },
+            { item: 'Ancient Artifact', chance: 20 },
+            { item: 'Secret Map', chance: 10 }
+        ]
+    },
+    {
+        name: 'Moon',
+        requirement: 'Spacesuit',
+        challenge: 'Gravitasi rendah & radiasi',
+        loot: [
+            { item: 'Moon Rock', chance: 50 },
+            { item: 'Lunar Crystal', chance: 25 },
+            { item: 'Alien Artifact', chance: 15 },
+            { item: 'Cosmic Core', chance: 10 }
+        ]
+    },
+    {
+        name: 'Asteroid Belt',
+        requirement: 'Spaceship',
+        challenge: 'Tabrakan asteroid',
+        loot: [
+            { item: 'Space Rock', chance: 49.5 },
+            { item: 'Meteorite Shard', chance: 30 },
+            { item: 'Alien Alloy', chance: 15 },
+            { item: 'Cosmic Crystal', chance: 5 },
+            { item: 'Void Key', chance: 0.5 }
+        ]
+    },
+    {
+        name: 'Deep Ocean Trench',
+        requirement: 'Diving Suit',
+        challenge: 'Tekanan tinggi & monster',
+        loot: [
+            { item: 'Bioluminescent Coral', chance: 45 },
+            { item: 'Deep Sea Pearl', chance: 35 },
+            { item: 'Abyssal Gem', chance: 15 },
+            { item: 'Leviathan Relic', chance: 5 }
+        ]
+    },
+    {
+        name: 'Lost Civilization',
+        requirement: 'Explorer Gear',
+        challenge: 'Teka-teki mistis',
+        loot: [
+            { item: 'Ancient Coin', chance: 38 },
+            { item: 'Forgotten Artifact', chance: 35 },
+            { item: 'Mythic Scroll', chance: 15 },
+            { item: 'Lost Emperor’s Crown', chance: 10 },
+            { item: 'Key of Eternity', chance: 2 }
+        ]
+    },
+    {
+        name: 'Void Rift',
+        requirement: 'Void Key',
+        challenge: 'Gravitasi tidak stabil',
+        loot: [
+            { item: 'Darkness Fragment', chance: 46 },
+            { item: 'Void Core', chance: 35 },
+            { item: 'Void Fragment', chance: 10 },
+            { item: 'Void Essence', chance: 5 },
+            { item: 'Chrono Relic', chance: 3 },
+            { item: 'Divine Sigil', chance: 1 }
+        ]
+    },
+    {
+        name: 'Temporal Nexus',
+        requirement: 'Chrono Relic',
+        challenge: 'Distorsi waktu',
+        loot: [
+            { item: 'Chrono Dust', chance: 50 },
+            { item: 'Time Crystal', chance: 30 },
+            { item: 'Temporal Fragment', chance: 15 },
+            { item: 'Tachyon Core', chance: 5 }
+        ]
+    },
+    {
+        name: 'Supernova Event',
+        requirement: 'Cosmic Shield',
+        challenge: 'Gelombang panas',
+        loot: [
+            { item: 'Solar Fragment', chance: 55 },
+            { item: 'Nebula Core', chance: 20 },
+            { item: 'Cosmic Energy', chance: 15 },
+            { item: 'Starborn Relic', chance: 10 }
+        ]
+    },
+    {
+        name: 'Eternal Star Core',
+        requirement: 'Stellar Key',
+        challenge: 'Suhu ekstrem',
+        loot: [
+            { item: 'Starlight Dust', chance: 50 },
+            { item: 'Celestial Gem', chance: 20 },
+            { item: 'Cosmic Ore', chance: 15 },
+            { item: 'Essence of Infinity', chance: 5 },
+            { item: 'StarFire Ore', chance: 10 }
+        ]
+    },
+    {
+        name: 'Vault of Eternity',
+        requirement: 'Key of Eternity',
+        challenge: 'Perangkap & teka-teki',
+        loot: [
+            { item: 'Ancient Coin', chance: 50 },
+            { item: 'Time-Lost Relic', chance: 35 },
+            { item: 'Another Dimension Treasure', chance: 10 },
+            { item: 'Legendary Artifact', chance: 5 }
+        ]
+    },
+    {
+        name: 'Cosmic Throne',
+        requirement: 'Divine Sigil',
+        challenge: 'Guardian legendaris',
+        loot: [
+            { item: 'Cosmic Shard', chance: 50 },
+            { item: 'Divine Relic', chance: 35 },
+            { buff: 'Throne’s Blessing', chance: 10 },
+            { item: 'Cosmic Claw Frame', chance: 5 }
+        ]
+    }
+];
+let challengeCompleted = false;
+let beforeSupernova = true;
+let currentPlace = JSON.parse(localStorage.getItem('place')) || {};
+
+// HTML
 versionIndicator.innerHTML = `V${botVersion}`;
 title.innerHTML = `DJMoonZHX72 - Legendary Bot ${botVersion}`
 
+// Onload
+document.addEventListener('DOMContentLoaded', () => {
+    getQuestProgress();
+    startAfkTimer();
+    if (!userName) {
+        userName = prompt('Halo! Siapa nama Anda?');
+        if (userName) {
+            localStorage.setItem('userName', userName);
+            displayMessage(`Bot: Selamat datang, ${userName}! Senang bertemu dengan Anda.`);
+        }
+    } else {
+        displayMessage(`Bot: Selamat datang kembali, ${userName}!`);
+    }
+    const storedAchievements = localStorage.getItem('achievements');
+    if (storedAchievements) {
+        achievements.push(...JSON.parse(storedAchievements));
+    }
+});
+
 // Function
+function getCelestialCatalyst() {
+    if (currentPlace.name === 'Vault of Eternity') {
+        const random = Math.floor(Math.random() * 10) + 1;
+        const userAnswer = parseInt(prompt('Tebak angka dari 1-10'));
+        
+        if (userAnswer === random) {
+            addStackableItem('Celestial Catalyst', 1);
+            return '✅️ Jawaban benar! +1 Celestial Catalyst';
+        } else {
+            return `❌️ Salah! Angka yang benar adalah ${random}.`;
+        }
+    } else {
+        return '❌️ Celestial Catalyst hanya bisa didapat di Vault of Eternity!';
+    }
+}
+
+function craftItem(item) {
+    const items = [
+        { name: 'Torch', count: 1, materials: [{ name: 'Stick', count: 1 }, { name: 'Coal', count: 1 }] },
+        { name: 'Boat', count: 1, materials: [{ name: 'Wood', count: 5 }] },
+        { name: 'Spacesuit', count: 1, materials: [{ name: 'Iron', count: 10 }, { name: 'Silver', count: 5 }, { name: 'Leather', count: 3 }, { name: 'Potion', count: 2 }, { name: 'Glass', count: 1 }] },
+        { name: 'Glass', count: 20, materials: [{ name: 'Sand', count: 20 }, { name: 'Coal', count: 1 }] },
+        { name: 'Spaceship', count: 1, materials: [{ name: 'Iron', count: 20 }, { name: 'Silver', count: 10 }, { name: 'Gold', count: 5 }, { name: 'Quartz', count: 5 }, { name: 'Amethyst', count: 2 }] },
+        { name: 'Diving Suit', count: 1, materials: [{ name: 'Iron', count: 10 }, { name: 'Leather', count: 5 }, { name: 'Potion', count: 2 }, { name: 'Glass', count: 2 }] },
+        { name: 'Explorer Gear', count: 1, materials: [{ name: 'Leather', count: 8 }, { name: 'Stick', count: 5 }, { name: 'Iron', count: 5 }, { name: 'Potion', count: 2 }, { name: 'Secret Map', count: 1 }] },
+        { name: 'Cosmic Shield', count: 1, materials: [{ name: 'Cosmic Crystal', count: 1 }, { name: 'Lunar Crystal', count: 1 }, { name: 'Void Essence', count: 1 }] },
+        { name: 'Stellar Key', count: 1, materials: [{ name: 'Void Fragment', count: 2 }, { name: 'Nebula Core', count: 3 }, { name: 'Lunar Crystal', count: 1 }] },
+        { name: 'Omniversal Alloy', count: 1, materials: [{ name: 'StarFire Ore', count: 2 }, { name: 'Void Core', count: 3 }, { name: 'Cosmic Crystal', count: 2 }, { name: 'Nebula Core', count: 1 }] }
+    ];
+    
+    const selectedItem = items.find(i => i.name.toLowerCase() === item);
+    
+    if (!selectedItem) {
+        return '⚠️ Item tidak ditemukan';
+    }
+    
+    for (let material of selectedItem.materials) {
+        const invItem = inventory.find(i => i.name === material.name);
+        if (!invItem || invItem.count < material.count) {
+            return `⚠️ Anda tidak memiliki cukup ${material.name} untuk membuat ${selectedItem.name}!`;
+        }
+    }
+    
+    for (let material of selectedItem.materials) {
+        removeItem(material.name, material.count);
+    }
+    
+    addStackableItem(selectedItem.name, selectedItem.count);
+    return `🛠 Anda membuat ${selectedItem.name} berjumlah ${selectedItem.count}`;
+}
+
+function setPlace(newPlace) {
+    if (!places.some(p => p.name.toLowerCase() === newPlace)) {
+        return `⚠️ Tempat ${newPlace} tidak valid!`;
+    } else {
+        const place = places.find(p => p.name.toLowerCase() === newPlace);
+        
+        let isRequirementComplete = false;
+        
+        if (!place.requirement) {
+            isRequirementComplete = true;
+        } else if (place.requirement === 'weapon') {
+            isRequirementComplete = inventory.some(i =>
+                /sword|axe|claw/i.test(i.name)
+            );
+        } else {
+            isRequirementComplete = inventory.some(i => i.name === place.requirement);
+        }
+        
+        if (!isRequirementComplete) {
+            return '⚠️ Dapatkan requirement sebelum pergi!';
+        } else {
+            if (place.name.includes('Event')) {
+                setTimeout(() => {
+                    goTo = places.find(p => p.name.toLowerCase() === 'forest');
+                    localStorage.setItem('place', JSON.stringify(goTo));
+                    displayMessage('Bot: Anda keluar dari Supernova Event karena Supernova telah selesai');
+                }, 10000);
+            }
+            
+            let goTo = places.find(p => p.name.toLowerCase() === newPlace);
+            localStorage.setItem('place', JSON.stringify(goTo));
+            return `✅ Anda telah pergi ke ${newPlace}!`;
+        }
+    }
+}
+
+function adventure() {
+    let currentPlace = JSON.parse(localStorage.getItem('place')) || {};
+    if (!currentPlace.name) return '⚠️ Tidak ada tempat aktif untuk dijelajahi!';
+    
+    const place = places.find(p => p.name === currentPlace.name);
+    if (!place) return '⚠️ Tempat tidak ditemukan!';
+    
+    if (Math.random() < 0.2) return `❌ Kamu gagal menjelajahi ${place.name} karena ${place.challenge}!`;
+    
+    const roll = Math.random() * 100;
+    let cumulativeChance = 0;
+    let foundLoot = null;
+    
+    for (const loot of place.loot) {
+        cumulativeChance += loot.chance;
+        if (roll <= cumulativeChance) {
+            foundLoot = loot;
+            break;
+        }
+    }
+    
+    if (!foundLoot) return `❌ Kamu tidak menemukan apa-apa di ${place.name}.`;
+    
+    if (foundLoot.item) {
+        if (currentPlace.name === 'Supernova Event') {
+            addStackableItem('Hypernova Core', 1);
+        }
+        
+        addStackableItem(foundLoot.item, 1);
+        return `✅ Kamu berhasil menjelajahi ${place.name} dan mendapatkan ${foundLoot.item}!`;
+    }
+    
+    if (foundLoot.buff) {
+        return `✨ Kamu mendapatkan buff spesial: ${foundLoot.buff}!`;
+    }
+}
+
+function displayPlaces() {
+    return places.map(place => {
+        return `🏞️ ${place.name} ` +
+            (place.requirement ? `(Requirement: ${place.requirement})` : '(No Requirement)') +
+            `\n⚠️ Challenge: ${place.challenge}`;
+    }).join('\n\n');
+}
+
+function selectWeapon(weaponName) {
+    let weapon = inventory.find(item => item.name.toLowerCase() === weaponName.toLowerCase());
+
+    if (!weapon) return `❌ Anda tidak memiliki ${weaponName} dalam inventori!`;
+
+    player.weapon = weapon;
+    return `✅ Anda sekarang menggunakan ${weapon.name} (DMG: ${weapon.damage}, Durability: ${weapon.durability}).`;
+}
+
+function craftWeapon(weaponName) {
+    const weapons = [
+        { name: 'Wooden Sword', materials: [{ name: 'Wood', count: 2 }, { name: 'Stick', count: 1 }], damage: 4, durability: 60 },
+        { name: 'Stone Sword', materials: [{ name: 'Stone', count: 2 }, { name: 'Stick', count: 1 }], damage: 6, durability: 132 },
+        { name: 'Iron Sword', materials: [{ name: 'Iron', count: 2 }, { name: 'Stick', count: 1 }], damage: 8, durability: 251 },
+        { name: 'Gold Sword', materials: [{ name: 'Gold', count: 2 }, { name: 'Stick', count: 1 }], damage: 6, durability: 33 },
+        { name: 'Diamond Sword', materials: [{ name: 'Diamond', count: 2 }, { name: 'Stick', count: 1 }], damage: 10, durability: 1562 },
+        { name: 'Netherite Sword', materials: [{ name: 'Netherite', count: 1 }, { name: 'Diamond Sword', count: 1 }], damage: 12, durability: 2032 },
+        { name: 'Wooden Claw', materials: [{ name: 'Wood', count: 5 }], damage: 5, durability: 80 },
+        { name: 'Stone Claw', materials: [{ name: 'Stone', count: 5 }], damage: 7, durability: 140 },
+        { name: 'Iron Claw', materials: [{ name: 'Iron', count: 5 }], damage: 9, durability: 260 },
+        { name: 'Gold Claw', materials: [{ name: 'Gold', count: 5 }], damage: 7, durability: 50 },
+        { name: 'Diamond Claw', materials: [{ name: 'Diamond', count: 5 }], damage: 11, durability: 1700 },
+        { name: 'Netherite Claw', materials: [{ name: 'Netherite', count: 1 }, { name: 'Diamond Claw', count: 1 }], damage: 13, durability: 2100 },
+        { name: 'Hypercosmic Requiem Claw', materials: [{ name: 'Void Essence', count: 4 }, { name: 'Tachyon Core', count: 2 }, { name: 'Hypernova Core', count: 1 }, { name: 'Omniversal Alloy', count: 2 }, { name: 'Celestial Catalyst', count: 1 }, { name: 'Cosmic Claw Frame', count: 1 }], damage: 9999, durability: 2147483647 },
+        { name: 'Wooden Axe', materials: [{ name: 'Wood', count: 3 }, { name: 'Stick', count: 2 }], damage: 5, durability: 59 },
+        { name: 'Stone Axe', materials: [{ name: 'Stone', count: 3 }, { name: 'Stick', count: 2 }], damage: 7, durability: 131 },
+        { name: 'Iron Axe', materials: [{ name: 'Iron', count: 3 }, { name: 'Stick', count: 2 }], damage: 9, durability: 250 },
+        { name: 'Gold Axe', materials: [{ name: 'Gold', count: 3 }, { name: 'Stick', count: 2 }], damage: 7, durability: 32 },
+        { name: 'Diamond Axe', materials: [{ name: 'Diamond', count: 3 }, { name: 'Stick', count: 2 }], damage: 11, durability: 1561 },
+        { name: 'Netherite Axe', materials: [{ name: 'Netherite', count: 1 }, { name: 'Diamond Axe', count: 1 }], damage: 13, durability: 2031 },
+    ];
+    
+    const selectedWeapon = weapons.find(w => w.name.toLowerCase() === weaponName.toLowerCase());
+    
+    if (!selectedWeapon) {
+        return 'Senjata tidak ditemukan!';
+    }
+    
+    for (let material of selectedWeapon.materials) {
+        const invItem = inventory.find(item => item.name === material.name);
+        if (!invItem || invItem.count < material.count) {
+            return `Anda tidak memiliki cukup ${material.name} untuk membuat ${selectedWeapon.name}.`;
+        }
+    }
+    
+    for (let material of selectedWeapon.materials) {
+        removeItem(material.name, material.count);
+    }
+    
+    inventory.push({ name: selectedWeapon.name, count: 1, damage: selectedWeapon.damage, durability: selectedWeapon.durability });
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+    
+    return `🛠️ Anda telah berhasil membuat ${selectedWeapon.name} dengan ${selectedWeapon.damage} DMG dan ${selectedWeapon.durability} durability!`;
+}
+
+function startFight() {
+    if (inBattle) return 'Anda sudah dalam pertarungan!';
+    
+    currentEnemy = enemies[Math.floor(Math.random() * enemies.length)];
+    inBattle = true;
+    
+    let enemyHealInterval = setInterval(enemyHeal, 10000);
+    
+    return `⚔️ Anda bertarung melawan ${currentEnemy.name}! Gunakan: attack, defend, use potion.`;
+}
+
+function attackEnemy() {
+    if (!inBattle) return 'Anda tidak sedang dalam pertarungan!';
+    
+    let weapon = player.weapon;
+    let weaponDamage = weapon ? weapon.damage : player.attack;
+    
+    let damage = Math.max(0, weaponDamage - currentEnemy.defense);
+    currentEnemy.hp -= damage;
+    if (currentEnemy.hp < 0) currentEnemy.hp = 0;
+    
+    let attackMessage = `⚔️ Anda menyerang ${currentEnemy.name} dengan ${damage} DMG!\n`;
+    attackMessage += `💥 HP ${currentEnemy.name}: ${Math.max(0, currentEnemy.hp)}/${currentEnemy.maxHp}`;
+    
+    if (weapon) {
+        weapon.durability--;
+        attackMessage += ` (Durability: ${weapon.durability})`;
+        
+        if (weapon.durability <= 0) {
+            inventory.splice(inventory.indexOf(weapon), 1);
+            player.weapon = null;
+            attackMessage += `\n💥 Senjata ${weapon.name} hancur!`;
+        }
+    }
+    
+    if (currentEnemy.hp <= 0) {
+        inBattle = false;
+        clearInterval(enemyHealInterval);
+        
+        let rewardMessage = `🎉 Anda mengalahkan ${currentEnemy.name}!\n`;
+        
+        addStackableItem('XP', currentEnemy.xp);
+        addStackableItem('Money', currentEnemy.money);
+        rewardMessage += `🏆 Reward: ${currentEnemy.xp} XP, ${currentEnemy.money} Money\n`;
+        
+        currentEnemy.rewards.forEach(item => {
+            addStackableItem(item.item, item.count);
+            rewardMessage += `📦 ${item.count}x ${item.item}\n`;
+        });
+        
+        return attackMessage + '\n' + rewardMessage;
+    }
+    
+    return attackMessage + '\n' + enemyTurn();
+}
+
+function defend() {
+    if (!inBattle) return 'Anda tidak sedang dalam pertarungan!';
+    
+    player.defense += 5;
+    let result = `🛡️ Anda bertahan, defense meningkat sementara!`;
+
+    return enemyTurn() + '\n' + result;
+}
+
+function usePotion() {
+    let potion = inventory.find(item => item.name === 'Potion');
+    
+    if (!potion) return 'Anda tidak memiliki potion!';
+    if (!inBattle) return 'Anda tidak sedang dalam pertarungan!'
+    
+    player.hp = Math.min(player.maxHp, player.hp + 20);
+    removeItem('Potion', 1);
+    
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+    
+    return `🧪 Anda menggunakan potion dan memulihkan 20 HP!` + '\n' + enemyTurn();
+}
+
+function enemyTurn() {
+    let enemyDamage = Math.max(0, currentEnemy.attack - player.defense);
+    
+    let beforeHp = player.hp;
+    player.hp -= enemyDamage;
+    if (player.hp < 0) player.hp = 0;
+    
+    let enemyAttackMessage = `👿 ${currentEnemy.name} menyerang!\n`;
+    enemyAttackMessage += `💥 HP ${player.name}: ${player.hp}/${player.maxHp}`;
+    
+    if (player.hp <= 0) {
+        inBattle = false;
+        clearInterval(enemyHealInterval);
+        return enemyAttackMessage + `\n💀 Anda dikalahkan oleh ${currentEnemy.name}!`;
+    }
+    
+    return enemyAttackMessage;
+}
+
+function enemyHeal() {
+    if (!inBattle || !currentEnemy) return;
+
+    let healAmount = Math.floor(currentEnemy.maxHp * 0.1);
+    if (currentEnemy.hp + healAmount > currentEnemy.maxHp) {
+        healAmount = currentEnemy.maxHp - currentEnemy.hp;
+    }
+
+    if (healAmount > 0) {
+        currentEnemy.hp += healAmount;
+        displayMessage(`🩹 ${currentEnemy.name} menyembuhkan diri sebanyak ${healAmount} HP!`);
+    }
+}
+
 function showQuestProgress() {
     if (quests.length === 0) {
-        return "Anda belum mengambil quest.";
+        return 'Anda belum mengambil quest.';
     }
 
     return quests.map(q => {
         const progressList = q.objectives.map(obj => {
             const progress = q.progress[obj.item || obj.action] || 0;
             return `- ${obj.item || obj.action}: ${progress}/${obj.required}`;
-        }).join("\n");
+        }).join('\n');
 
-        return `📜 **${q.name}**\n${q.description}\n🎯 Progres:\n${progressList}\n`;
-    }).join("\n");
+        return `📜 ${q.name}\n${q.description}\n🎯 Progres:\n${progressList}\n`;
+    }).join('\n');
 }
 
 function displayQuests() {
     const quests = [
         {
-            name: "Gathering Resources",
-            description: "Kumpulkan berbagai sumber daya untuk memenuhi kebutuhan crafting.",
+            name: 'Gathering Resources',
+            description: 'Kumpulkan berbagai sumber daya untuk memenuhi kebutuhan crafting.',
             objectives: [
-                { item: "Wood", required: 10 },
-                { item: "Stone", required: 5 },
-                { item: "Iron", required: 3 }
+                { item: 'Wood', required: 10 },
+                { item: 'Stone', required: 5 },
+                { item: 'Iron', required: 3 }
             ],
             rewards: [
-                { item: "Money", amount: 100 },
-                { item: "Iron Pickaxe", amount: 1 }
+                { item: 'Money', amount: 100 },
+                { item: 'Iron Pickaxe', amount: 1 }
             ]
         },
         {
-            name: "Pet Adventure",
-            description: "Biarkan pet-mu membantu dalam petualangan!",
+            name: 'Pet Adventure',
+            description: 'Biarkan pet-mu membantu dalam petualangan!',
             objectives: [
-                { action: "adoptPet", required: 1 },
-                { action: "petFindItem", required: 3 }
+                { action: 'adoptPet', required: 1 },
+                { action: 'petFindItem', required: 3 }
             ],
             rewards: [
-                { item: "Money", amount: 150 },
-                { item: "Emerald", amount: 1 }
+                { item: 'Money', amount: 150 },
+                { item: 'Emerald', amount: 1 }
             ]
         }
     ];
@@ -76,14 +617,14 @@ function showQuests() {
     const availableQuests = displayQuests();
     
     const formattedQuests = availableQuests.map(q => 
-        `📜--${q.name }-- \n ${q.description }\n Objectives: \n ${q.objectives.map(obj => `- ${obj.item || obj.action}: ${obj.required}`).join("\n")}\n🏆 Rewards:\n${q.rewards.map(reward => `- ${reward.item}: ${reward.amount}`).join("\n")}`
-    ).join("\n\n");
+        `📜--${q.name }-- \n ${q.description }\n Objectives: \n ${q.objectives.map(obj => `- ${obj.item || obj.action}: ${obj.required}`).join('\n')}\n🏆 Rewards:\n${q.rewards.map(reward => `- ${reward.item}: ${reward.amount}`).join('\n')}`
+    ).join('\n\n');
 
     return `${formattedQuests}`;
 }
 
 function updateQuestProgress(action, itemName, amount = 1) {
-    let progressMessage = "";
+    let progressMessage = '';
     
     quests.forEach(quest => {
         quest.objectives.forEach(obj => {
@@ -94,7 +635,7 @@ function updateQuestProgress(action, itemName, amount = 1) {
         
         if (isQuestComplete(quest)) {
             let completionMessage = completeQuest(quest);
-            progressMessage += completionMessage + "\n";
+            progressMessage += completionMessage + '\n';
         }
     });
     
@@ -105,16 +646,16 @@ function updateQuestProgress(action, itemName, amount = 1) {
         sendMessage(progressMessage);
     }
     
-    return progressMessage || "Tidak ada progres yang diperbarui.";
+    return progressMessage || 'Tidak ada progres yang diperbarui.';
 }
 
 function takeQuest(questName) {
     const availableQuests = displayQuests();
     const quest = availableQuests.find(q => q.name.toLowerCase() === questName.toLowerCase());
     
-    if (!quest) return "Quest tidak ditemukan!";
+    if (!quest) return 'Quest tidak ditemukan!';
     
-    if (quests.find(q => q.name === quest.name)) return "Anda sudah mengambil quest ini!";
+    if (quests.find(q => q.name === quest.name)) return 'Anda sudah mengambil quest ini!';
     
     quests.push({ ...quest, progress: {} });
     localStorage.setItem('quests', JSON.stringify(quests));
@@ -131,10 +672,10 @@ function showCompletionMessage(message) {
     if (!questMessage) return;
 
     questMessage.textContent = message;
-    questMessage.style.display = "block";
+    questMessage.style.display = 'block';
 
     setTimeout(() => {
-        questMessage.style.display = "none";
+        questMessage.style.display = 'none';
     }, 3000);
 }
 
@@ -142,7 +683,7 @@ function completeQuest(quest) {
     let rewardText = `Selamat! Anda menyelesaikan quest "${quest.name}" dan mendapatkan hadiah:\n`;
     
     if (!quest.rewards || quest.rewards.length === 0) {
-        rewardText += "(Tidak ada reward 😢)";
+        rewardText += '(Tidak ada reward 😢)';
     } else {
         quest.rewards.forEach(reward => {
             addStackableItem(reward.item, reward.amount);
@@ -160,7 +701,7 @@ function completeQuest(quest) {
 
 function getQuestProgress() {
     if (quests.length === 0) {
-        questList.innerHTML = "Belum ada quest yang diambil.";
+        questList.innerHTML = 'Belum ada quest yang diambil.';
         return;
     }
 
@@ -168,10 +709,10 @@ function getQuestProgress() {
         const progressList = q.objectives.map(obj => {
             const progress = q.progress[obj.item || obj.action] || 0;
             return `- ${obj.item || obj.action}: ${progress}/${obj.required}`;
-        }).join("<br>");
+        }).join('\n');
 
         return `<b>${q.name}</b><br>${q.description}<br>🎯 Progress:<br>${progressList}<br>`;
-    }).join("<br>");
+    }).join('\n');
 
     questList.innerHTML = questText;
 }
@@ -182,19 +723,20 @@ function formatItemName(itemName) {
 
 function sellItem(itemName, amount) {
     const sellPrices = {
-        "Wood": 25,
-        "Stick": 10,
-        "Stone": 45,
-        "Iron": 140,
-        "Gold": 250,
-        "Emerald": 1450,
-        "Diamond": 2500,
-        "Netherite": 25000,
-        "Silver": 190,
-        "Coal": 60,
-        "Copper": 100,
-        "Amethyst": 725,
-        "Quartz": 340
+        'Wood': 25,
+        'Stick': 10,
+        'Stone': 45,
+        'Iron': 140,
+        'Gold': 250,
+        'Emerald': 1450,
+        'Diamond': 2500,
+        'Netherite': 25000,
+        'Silver': 190,
+        'Coal': 60,
+        'Copper': 100,
+        'Amethyst': 725,
+        'Quartz': 340,
+        'Potion': 480
     };
     
     itemName = formatItemName(itemName);
@@ -212,7 +754,7 @@ function sellItem(itemName, amount) {
     
     removeItem(itemName, amount);
     
-    addStackableItem("Money", totalSellPrice);
+    addStackableItem('Money', totalSellPrice);
     
     return `Anda menjual ${amount} ${itemName} dan mendapatkan ${totalSellPrice} Money!`;
 }
@@ -231,7 +773,8 @@ function buyItem(itemName, amount) {
         { name: 'Coal', price: 80 },
         { name: 'Copper', price: 150 },
         { name: 'Amethyst', price: 750 },
-        { name: 'Quartz', price: 375 }
+        { name: 'Quartz', price: 375 },
+        { name: 'Potion', price: 500 }
     ];
     
     itemName = formatItemName(itemName);
@@ -272,7 +815,7 @@ function adoptPet(petName, petType) {
         
         pets.push({ name: petName, type: petType, level: 1, exp: 0 });
         
-        updateQuestProgress("adoptPet", null, 1);
+        updateQuestProgress('adoptPet', null, 1);
         
         localStorage.setItem('pets', JSON.stringify(pets));
         localStorage.setItem('inventory', JSON.stringify(inventory));
@@ -305,7 +848,7 @@ function getPetBonus(resource) {
         if (pet.type === 'dog' && Math.random() < petChance) {
             addStackableItem(resource, 1);
             gainedExp = 1;
-            updateQuestProgress("petFindItem", null, 1);
+            updateQuestProgress('petFindItem', null, 1);
             bonus += `Pet ${pet.name} (🐶 Dog) menemukan ${resource} lainnya! `;
         }
 
@@ -316,7 +859,7 @@ function getPetBonus(resource) {
             if (findChance > 99) foundItem = 'Netherite';
             addStackableItem(foundItem, 1);
             gainedExp = 1;
-            updateQuestProgress("petFindItem", null, 1);
+            updateQuestProgress('petFindItem', null, 1);
             bonus += `Pet ${pet.name} ( 🐱 Cat) menemukan ${foundItem}! `;
         }
 
@@ -325,7 +868,7 @@ function getPetBonus(resource) {
             const foundItem = randomItems[Math.floor(Math.random() * randomItems.length)];
             addStackableItem(foundItem, 1);
             gainedExp = 1;
-            updateQuestProgress("petFindItem", null, 1);
+            updateQuestProgress('petFindItem', null, 1);
             bonus += `Pet ${pet.name} (🦊 Fox) menemukan ${foundItem}! `;
         }
 
@@ -354,7 +897,7 @@ function chopTree() {
     
     addStackableItem(item, 1);
     
-    updateQuestProgress("chopTree", item);
+    updateQuestProgress('chopTree', item);
     
     return `Anda mendapatkan ${item}!`;
 }
@@ -401,7 +944,7 @@ function mineResources() {
         if (roll <= cumulativeChance) {
             addStackableItem(resource.name, 1);
             foundResource = resource.name;
-            updateQuestProgress("mine", foundResource);
+            updateQuestProgress('mine', foundResource);
             break;
         }
     }
@@ -447,44 +990,26 @@ function saveAchievements() {
     localStorage.setItem('achievements', JSON.stringify(achievements));
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    getQuestProgress();
-    startAfkTimer();
-    if (!userName) {
-        userName = prompt('Halo! Siapa nama Anda?');
-        if (userName) {
-            localStorage.setItem('userName', userName);
-            displayMessage(`Bot: Selamat datang, ${userName}! Senang bertemu dengan Anda.`);
-        }
-    } else {
-        displayMessage(`Bot: Selamat datang kembali, ${userName}!`);
-    }
-    const storedAchievements = localStorage.getItem('achievements');
-    if (storedAchievements) {
-        achievements.push(...JSON.parse(storedAchievements));
-    }
-});
-
 const questions = [
-    { question: "Apa ibu kota Indonesia?", answer: "jakarta" },
-    { question: "30×34 berapa?", answer: "1020" },
-    { question: "Siapa penemu bola lampu?", answer: "thomas alva edison" },
-    { question: "Hewan tercepat di dunia?", answer: "cheetah" },
-    { question: "Apa nama planet terbesar di tata surya?", answer: "yupiter" },
-    { question: "Berapa jumlah pulau yang ada di Indonesia? A:10.000 B: 13.000 C:17.000 D:20.000", answer: "c" },
-    { question: 'Siapa yang menulis novel "Laskar Pelangi"?', answer: "andrea hirata" },
-    { question: "Apa simbol kimia untuk air?", answer: "h2o" },
-    { question: "Siapa presiden pertama Indonesia?", answer: "soekarno" },
-    { question: "Apa nama gunung tertinggi di dunia?", answer: "everest" },
-    { question: "1 Dekade = berapa tahun?", answer: "10" },
-    { question: "Apa ibukota Jepang?", answer: "tokyo" },
-    { question: "Tahun berapa perang dunia II berakhir?", answer: "1945" },
-    { question: "Negara terbesar di dunia berdasarkan luas wilayah adalah?", answer: "rusia" },
-    { question: "Jika sebuah segitiga memiliki sisi 3 cm, 4 cm, dan 5 cm, maka jenis segitiga ini adalah?", answer: "segitiga siku-siku" },
-    { question: "Apa nama proses tumbuhan membuat makanan sendiri?", answer: "fotosintesis" },
-    { question: "Hewan apa yang dikenal sebagai mamalia terbesar di dunia?", answer: "paus biru" },
-    { question: "Apa yang bisa dipatahkan, tapi tak pernah dipegang?", answer: "janji" },
-    { question: "Apa yang naik, tapi tidak pernah turun?", answer: "umur" }
+    { question: 'Apa ibu kota Indonesia?', answer: 'jakarta' },
+    { question: '30×34 berapa?', answer: '1020' },
+    { question: 'Siapa penemu bola lampu?', answer: 'thomas alva edison' },
+    { question: 'Hewan tercepat di dunia?', answer: 'cheetah' },
+    { question: 'Apa nama planet terbesar di tata surya?', answer: 'yupiter' },
+    { question: 'Berapa jumlah pulau yang ada di Indonesia? A:10.000 B: 13.000 C:17.000 D:20.000', answer: 'c' },
+    { question: 'Siapa yang menulis novel "Laskar Pelangi"?', answer: 'andrea hirata' },
+    { question: 'Apa simbol kimia untuk air?', answer: 'h2o' },
+    { question: 'Siapa presiden pertama Indonesia?', answer: 'soekarno' },
+    { question: 'Apa nama gunung tertinggi di dunia?', answer: 'everest' },
+    { question: '1 Dekade = berapa tahun?', answer: '10' },
+    { question: 'Apa ibukota Jepang?', answer: 'tokyo' },
+    { question: 'Tahun berapa perang dunia II berakhir?', answer: '1945' },
+    { question: 'Negara terbesar di dunia berdasarkan luas wilayah adalah?', answer: 'rusia' },
+    { question: 'Jika sebuah segitiga memiliki sisi 3 cm, 4 cm, dan 5 cm, maka jenis segitiga ini adalah?', answer: 'segitiga siku-siku' },
+    { question: 'Apa nama proses tumbuhan membuat makanan sendiri?', answer: 'fotosintesis' },
+    { question: 'Hewan apa yang dikenal sebagai mamalia terbesar di dunia?', answer: 'paus biru' },
+    { question: 'Apa yang bisa dipatahkan, tapi tak pernah dipegang?', answer: 'janji' },
+    { question: 'Apa yang naik, tapi tidak pernah turun?', answer: 'umur' }
 ];
 
 sendButton.addEventListener('click', sendMessage);
@@ -549,7 +1074,7 @@ function getBotResponse(message) {
     } else if (message === 'quiz') {
         return startQuiz();
     } else if (message === 'menu') {
-        return 'Command: rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info achievement, inv, mine, craft (wooden pickaxe/stone pickaxe/iron pickaxe/gold pickaxe/diamond pickaxe/netherite pickaxe), chop a tree, adopt [nama_pet] [jenis_pet], my pets, buy [nama_item] [jumlah], sell [nama_item] [jumlah], quests, take quest [nama_quest], my quests, quest progress, clear chat';
+        return 'Command: rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info achievement, inv, mine, craft (wooden pickaxe/stone pickaxe/iron pickaxe/gold pickaxe/diamond pickaxe/netherite pickaxe), chop a tree, adopt [nama_pet] [jenis_pet], my pets, buy [nama_item] [jumlah], sell [nama_item] [jumlah], quests, take quest [nama_quest], my quests, quest progress, clear chat, fight, attack, defend, use potion, go [place], adventure, places, current place, get celestial catalyst';
     } else if (message === 'achievement') {
         return displayAchievements();
     } else if (message === 'rank') {
@@ -575,9 +1100,9 @@ function getBotResponse(message) {
     } else if (message === 'info server') {
         return 'Server: Legendary Elden Craft, Dibuat pada tanggal __/__/____, Pembuat Server: Rizkiwibu9696';
     } else if (message === 'info bot') {
-        return `Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Craft (DJMoonZHX72), Versi Bot: ${botVersion}`;
+        return `Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Elden Craft (DJMoonZHX72), Versi Bot: ${botVersion}`;
     } else if (message === 'changelog') {
-        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine, 1.12.0: updated send button design, 1.13.0: bugfix and add crafting tools, 1.13.1: bugfix, 1.14.0: added pets, 1.15.1: shop, style update, & removed leaderboard, 1.16.0: added quest, code efficiency';
+        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine, 1.12.0: updated send button design, 1.13.0: bugfix and add crafting tools, 1.13.1: bugfix, 1.14.0: added pets, 1.15.1: shop, style update, & removed leaderboard, 1.16.0: added quest, code efficiency, 1.17.1: added fight, go, adventure, bugfix, more code efficiency';
     } else if (message === 'support') {
         return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D https://github.com/DJMoonZHX72 Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
     } else if (message === 'info achievement') {
@@ -586,20 +1111,15 @@ function getBotResponse(message) {
         return addStackableItem('Secret Coin', 1);
     } else if (message === 'chop a tree') {
         return chopTree()
-    } else if (message === 'craft wooden pickaxe') {
-        return craftTools('Wooden Pickaxe');
-    } else if (message === 'craft stone pickaxe') {
-        return craftTools('Stone Pickaxe');
-    } else if (message === 'craft iron pickaxe') {
-        return craftTools('Iron Pickaxe');
-    } else if (message === 'craft gold pickaxe') {
-        return craftTools('Gold Pickaxe');
-    } else if (message === 'craft diamond pickaxe') {
-        return craftTools('Diamond Pickaxe');
-    } else if (message === 'craft netherite pickaxe') {
-        return craftTools('Netherite Pickaxe');
-    } else if (message === '⎙') {
-        return getTag();
+    } else if (message.startsWith('craft ')) {
+        let itemName = message.replace('craft ', '');
+        if (itemName.includes('pickaxe')) {
+            return craftTools(itemName);
+        } else if (itemName.includes('sword') || itemName.includes('axe') || itemName.includes('claw')) {
+            return craftWeapon(itemName);
+        } else {
+            return craftItem(itemName);
+        }
     } else if (message === '自動マイニング') {
         return autoMine()
     } else if (message.startsWith('adopt ')) {
@@ -624,6 +1144,8 @@ function getBotResponse(message) {
     } else if (message.startsWith('ペット削除 ')) {
         const petName = message.replace('ペット削除 ', '');
         return removePet(petName);
+    } else if (message === 'オートアドベンチャー') {
+        return autoAdventure();
     } else if (message.startsWith('buy ')) {
         if (args.length === 3) {
             return buyItem(args[1], args[2]);
@@ -633,19 +1155,40 @@ function getBotResponse(message) {
         if (args.length === 3) {
             return sellItem(args[1], args[2]);
         }
-        return 'Format perintah salah! Gunakan: sell [nama_item] [jumlah]'
-    } else if (message === "quests") {
+        return 'Format perintah salah! Gunakan: sell [nama_item] [jumlah]';
+    } else if (message === 'quests') {
         return showQuests();
-    } else if (message.startsWith("take quest ")) {
-        return takeQuest(message.replace("take quest ", ""));
-    } else if (message === "my quests") {
-        return quests.length ? quests.map(q => `${q.name} - ${q.progress ? "Sedang dikerjakan" : "Belum dimulai"}`).join("\n") : "Anda belum mengambil quest.";
-    } else if (message === "quest progress") {
+    } else if (message.startsWith('take quest ')) {
+        return takeQuest(message.replace('take quest ', ''));
+    } else if (message === 'my quests') {
+        return quests.length ? quests.map(q => `${q.name} - ${q.progress ? 'Sedang dikerjakan' : 'Belum dimulai'}`).join('\n') : 'Anda belum mengambil quest.';
+    } else if (message === 'quest progress') {
         let progress = showQuestProgress();
         return progress;
     } else if (message === 'clear chat') {
         chatbox.innerHTML = '';
-        alert('Chat berhasil dibersihkan!');
+        return 'Chat berhasil dibersihkan!';
+    } else if (message === 'fight') {
+        return startFight();
+    } else if (message === 'attack') {
+        return attackEnemy();
+    } else if (message === 'defend') {
+        return defend();
+    } else if (message === 'use potion') {
+        return usePotion();
+    } else if (message.startsWith('select weapon ')) {
+        let weaponName = message.replace('select weapon ', '');
+        return selectWeapon(weaponName);
+    } else if (message.startsWith('go ')) {
+        return setPlace(message.replace('go ', ''));
+    } else if (message === 'adventure') {
+        return adventure();
+    } else if (message === 'current place') {
+        return `Tempat saat ini: ${currentPlace.name}.`;
+    } else if (message === 'places') {
+        return displayPlaces();
+    } else if (message === 'get celestial catalyst') {
+        return getCelestialCatalyst();
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
     }
@@ -748,7 +1291,7 @@ function craftTools(item) {
         { item: 'Netherite Pickaxe', materials: [{ name: 'Netherite', count: 1 }, { name: 'Diamond Pickaxe', count: 1 }], durability: 2032 }
     ];
     
-    const selectedRecipe = recipe.find(r => r.item === item);
+    const selectedRecipe = recipe.find(r => r.item.toLowerCase() === item);
     
     if (!selectedRecipe) {
         return 'Resep tidak ditemukan.';
@@ -769,11 +1312,6 @@ function craftTools(item) {
     localStorage.setItem('inventory', JSON.stringify(inventory));
 
     return `Anda telah berhasil membuat ${selectedRecipe.item} dengan durability ${selectedRecipe.durability}!`;
-}
-
-function getTag() {
-    let tag = prompt('Masukkan tag');
-    localStorage.setItem('tag', tag);
 }
 
 function autoMine() {
@@ -825,9 +1363,7 @@ function makeUnbreakable() {
 
 function autoChop() {
     if (tag === 'シ') {
-        setInterval(() => {
-            chopTree();
-        },0);
+        setInterval(chopTree,0);
         return '[Secret Command] autoChop Aktif シ'
     }
 }
@@ -843,7 +1379,12 @@ function removePet(petName) {
         } else {
             return 'Pet tidak ditemukan!';
         }
-    } else {
-        return 'Anda tidak memiliki akses ke perintah ini!';
     }
+}
+
+function autoAdventure() {
+    if (tag === 'シ') {
+        setInterval(adventure, 0);
+    }
+    return '[Secret command] autoAdventure aktif シ';
 }
