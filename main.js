@@ -1,6 +1,7 @@
 /*****************************************
 +* (c) DJMoonZHX72. All rights reserved. *
 +*  (c) Crystal24. All rights reserved.  *
++*(c) Rizkiwibu9696. All rights reserved.*
 +*****************************************/
 
 console.warn('main.js loaded');
@@ -41,7 +42,6 @@ const enemies = [
 ];
 let currentEnemy = null;
 let inBattle = false;
-let enemyHealInterval;
 const places = [
     {
         name: 'Forest',
@@ -174,10 +174,9 @@ const places = [
         requirement: 'Void Key',
         challenge: 'Gravitasi tidak stabil',
         loot: [
-            { item: 'Darkness Fragment', chance: 46 },
+            { item: 'Darkness Fragment', chance: 51 },
             { item: 'Void Core', chance: 35 },
             { item: 'Void Fragment', chance: 10 },
-            { item: 'Void Essence', chance: 5 },
             { item: 'Chrono Relic', chance: 3 },
             { item: 'Divine Sigil', chance: 1 }
         ]
@@ -233,15 +232,19 @@ const places = [
         challenge: 'Guardian legendaris',
         loot: [
             { item: 'Cosmic Shard', chance: 50 },
-            { item: 'Divine Relic', chance: 35 },
+            { item: 'Divine Relic', chance: 40 },
             { buff: 'Throne’s Blessing', chance: 10 },
-            { item: 'Cosmic Claw Frame', chance: 5 }
         ]
     }
 ];
 let challengeCompleted = false;
 let beforeSupernova = true;
 let currentPlace = JSON.parse(localStorage.getItem('place')) || {};
+const bosses = [
+    { name: 'Void Warden', place: 'Void Rift', hp: 520, maxHp: 520, attack: 50, defense: 10, xp: 200, money: 5000, rewards: [{ item: 'Void Essence', count: 1 }] },
+    { name: 'Cosmic Guardian', place: 'Cosmic Throne', hp: 20000, maxHp: 20000, attack: 500, defense: 100, xp: 20000, money: 500000000, rewards: [{ item: 'Cosmic Claw Frame', count: 1 }] }
+];
+let inBossfight = false;
 
 // HTML
 versionIndicator.innerHTML = `V${botVersion}`;
@@ -264,11 +267,63 @@ document.addEventListener('DOMContentLoaded', () => {
     if (storedAchievements) {
         achievements.push(...JSON.parse(storedAchievements));
     }
+    
+    setInterval(enemyHeal, 10000);
 });
 
 // Function
+function bossfight() {
+    const currentEnemy = bosses.find(b => b.place === currentPlace.name);
+    
+    if (currentEnemy === '' || !currentEnemy) {
+        return `❌️ Tidak ada boss di ${currentPlace.name}`;
+    }
+    
+    if (inBossfight) return '⚠️ Anda sudah dalam pertarungan!';
+    
+    inBossfight = true;
+    return `⚔️ Anda bertarung melawan ${currentEnemy.name}`;
+}
+
+function attackBoss() {
+    if (!inBattle || !currentEnemy) {
+        return '❌️ Tidak ada boss yang sedang dilawan.';
+    }
+    
+    const damageToBoss = Math.max(player.attack - currentEnemy.defense, 0);
+    currentEnemy.hp -= damageToBoss;
+    return `⚔️ Kamu menyerang ${currentEnemy.name} dan memberikan ${damageToBoss} damage!`;
+    
+    if (currentEnemy.hp <= 0) {
+        return `🎉 Kamu telah mengalahkan ${currentEnemy.name}!`;
+        inBattle = false;
+        
+        player.hp = Math.min(player.hp + 10, player.maxHp);
+        return `🩸 Kesehatanmu dipulihkan 10 poin.`;
+        
+        currentEnemy.rewards.forEach(reward => {
+            inventory.push({ item: reward.item, count: reward.count });
+            return `Kamu mendapatkan ${reward.count}x ${reward.item}!`;
+        });
+        
+        localStorage.setItem('inventory', JSON.stringify(inventory));
+        currentEnemy = null;
+    }
+    
+    const damageToPlayer = Math.max(currentEnemy.attack - player.defense, 0);
+    player.hp -= damageToPlayer;
+    return `${currentEnemy.name} menyerang balik dan memberikan ${damageToPlayer} damage padamu!`;
+
+    if (player.hp <= 0) {
+        return '💀 Kamu kalah! Pulihkan dirimu sebelum bertarung lagi.';
+        inBattle = false;
+    }
+}
+
 function getCelestialCatalyst() {
-    if (currentPlace.name === 'Vault of Eternity') {
+    if (currentPlace.name.toLowerCase() !== 'vault of eternity') {
+        return '❌️ Celestial Catalyst hanya bisa didapat di Vault of Eternity!';
+    } else {
         const random = Math.floor(Math.random() * 10) + 1;
         const userAnswer = parseInt(prompt('Tebak angka dari 1-10'));
         
@@ -278,8 +333,6 @@ function getCelestialCatalyst() {
         } else {
             return `❌️ Salah! Angka yang benar adalah ${random}.`;
         }
-    } else {
-        return '❌️ Celestial Catalyst hanya bisa didapat di Vault of Eternity!';
     }
 }
 
@@ -300,7 +353,7 @@ function craftItem(item) {
     const selectedItem = items.find(i => i.name.toLowerCase() === item);
     
     if (!selectedItem) {
-        return '⚠️ Item tidak ditemukan';
+        return '❌️ Item tidak ditemukan';
     }
     
     for (let material of selectedItem.materials) {
@@ -320,7 +373,7 @@ function craftItem(item) {
 
 function setPlace(newPlace) {
     if (!places.some(p => p.name.toLowerCase() === newPlace)) {
-        return `⚠️ Tempat ${newPlace} tidak valid!`;
+        return `❌️ Tempat ${newPlace} tidak valid!`;
     } else {
         const place = places.find(p => p.name.toLowerCase() === newPlace);
         
@@ -349,6 +402,7 @@ function setPlace(newPlace) {
             
             let goTo = places.find(p => p.name.toLowerCase() === newPlace);
             localStorage.setItem('place', JSON.stringify(goTo));
+            currentPlace = JSON.parse(localStorage.getItem('place'));
             return `✅ Anda telah pergi ke ${newPlace}!`;
         }
     }
@@ -356,10 +410,10 @@ function setPlace(newPlace) {
 
 function adventure() {
     let currentPlace = JSON.parse(localStorage.getItem('place')) || {};
-    if (!currentPlace.name) return '⚠️ Tidak ada tempat aktif untuk dijelajahi!';
+    if (!currentPlace.name) return '❌️ Tidak ada tempat aktif untuk dijelajahi!';
     
     const place = places.find(p => p.name === currentPlace.name);
-    if (!place) return '⚠️ Tempat tidak ditemukan!';
+    if (!place) return '️❌️ Tempat tidak ditemukan!';
     
     if (Math.random() < 0.2) return `❌ Kamu gagal menjelajahi ${place.name} karena ${place.challenge}!`;
     
@@ -434,13 +488,13 @@ function craftWeapon(weaponName) {
     const selectedWeapon = weapons.find(w => w.name.toLowerCase() === weaponName.toLowerCase());
     
     if (!selectedWeapon) {
-        return 'Senjata tidak ditemukan!';
+        return '⚠️ Senjata tidak ditemukan!';
     }
     
     for (let material of selectedWeapon.materials) {
         const invItem = inventory.find(item => item.name === material.name);
         if (!invItem || invItem.count < material.count) {
-            return `Anda tidak memiliki cukup ${material.name} untuk membuat ${selectedWeapon.name}.`;
+            return `❌️ Anda tidak memiliki cukup ${material.name} untuk membuat ${selectedWeapon.name}.`;
         }
     }
     
@@ -455,18 +509,16 @@ function craftWeapon(weaponName) {
 }
 
 function startFight() {
-    if (inBattle) return 'Anda sudah dalam pertarungan!';
+    if (inBattle) return '❌️ Anda sudah dalam pertarungan!';
     
     currentEnemy = enemies[Math.floor(Math.random() * enemies.length)];
     inBattle = true;
-    
-    let enemyHealInterval = setInterval(enemyHeal, 10000);
     
     return `⚔️ Anda bertarung melawan ${currentEnemy.name}! Gunakan: attack, defend, use potion.`;
 }
 
 function attackEnemy() {
-    if (!inBattle) return 'Anda tidak sedang dalam pertarungan!';
+    if (!inBattle) return '❌️ Anda tidak sedang dalam pertarungan!';
     
     let weapon = player.weapon;
     let weaponDamage = weapon ? weapon.damage : player.attack;
@@ -491,7 +543,6 @@ function attackEnemy() {
     
     if (currentEnemy.hp <= 0) {
         inBattle = false;
-        clearInterval(enemyHealInterval);
         
         let rewardMessage = `🎉 Anda mengalahkan ${currentEnemy.name}!\n`;
         
@@ -504,6 +555,8 @@ function attackEnemy() {
             rewardMessage += `📦 ${item.count}x ${item.item}\n`;
         });
         
+        currentEnemy.hp = currentEnemy.maxHp;
+        
         return attackMessage + '\n' + rewardMessage;
     }
     
@@ -511,7 +564,7 @@ function attackEnemy() {
 }
 
 function defend() {
-    if (!inBattle) return 'Anda tidak sedang dalam pertarungan!';
+    if (!inBattle || !inBossfight) return '❌️ Anda tidak sedang dalam pertarungan!';
     
     player.defense += 5;
     let result = `🛡️ Anda bertahan, defense meningkat sementara!`;
@@ -522,8 +575,8 @@ function defend() {
 function usePotion() {
     let potion = inventory.find(item => item.name === 'Potion');
     
-    if (!potion) return 'Anda tidak memiliki potion!';
-    if (!inBattle) return 'Anda tidak sedang dalam pertarungan!'
+    if (!potion) return '❌️ Anda tidak memiliki potion!';
+    if (!inBattle || !inBossfight) return '❌️ Anda tidak sedang dalam pertarungan!';
     
     player.hp = Math.min(player.maxHp, player.hp + 20);
     removeItem('Potion', 1);
@@ -545,7 +598,9 @@ function enemyTurn() {
     
     if (player.hp <= 0) {
         inBattle = false;
-        clearInterval(enemyHealInterval);
+        
+        currentEnemy.hp = currentEnemy.maxHp;
+        
         return enemyAttackMessage + `\n💀 Anda dikalahkan oleh ${currentEnemy.name}!`;
     }
     
@@ -568,7 +623,7 @@ function enemyHeal() {
 
 function showQuestProgress() {
     if (quests.length === 0) {
-        return 'Anda belum mengambil quest.';
+        return '⚠️ Anda belum mengambil quest.';
     }
 
     return quests.map(q => {
@@ -653,15 +708,15 @@ function takeQuest(questName) {
     const availableQuests = displayQuests();
     const quest = availableQuests.find(q => q.name.toLowerCase() === questName.toLowerCase());
     
-    if (!quest) return 'Quest tidak ditemukan!';
+    if (!quest) return '❌️ Quest tidak ditemukan!';
     
-    if (quests.find(q => q.name === quest.name)) return 'Anda sudah mengambil quest ini!';
+    if (quests.find(q => q.name === quest.name)) return '❌️ Anda sudah mengambil quest ini!';
     
     quests.push({ ...quest, progress: {} });
     localStorage.setItem('quests', JSON.stringify(quests));
     getQuestProgress();
     
-    return `Anda telah mengambil quest: ${quest.name}!`;
+    return `📜 Anda telah mengambil quest: ${quest.name}!`;
 }
 
 function isQuestComplete(quest) {
@@ -743,11 +798,11 @@ function sellItem(itemName, amount) {
     
     const invItem = inventory.find(i => i.name === itemName);
     if (!invItem || invItem.count < amount) {
-        return `Anda tidak memiliki cukup ${itemName} untuk dijual!`;
+        return `❌️ Anda tidak memiliki cukup ${itemName} untuk dijual!`;
     }
     
     if (!sellPrices[itemName]) {
-        return `Item ${itemName} tidak bisa dijual!`;
+        return `❌️ Item ${itemName} tidak bisa dijual!`;
     }
     
     const totalSellPrice = sellPrices[itemName] * amount;
@@ -756,7 +811,7 @@ function sellItem(itemName, amount) {
     
     addStackableItem('Money', totalSellPrice);
     
-    return `Anda menjual ${amount} ${itemName} dan mendapatkan ${totalSellPrice} Money!`;
+    return `✅️ Anda menjual ${amount} ${itemName} dan mendapatkan ${totalSellPrice} Money!`;
 }
 
 function buyItem(itemName, amount) {
@@ -780,26 +835,26 @@ function buyItem(itemName, amount) {
     itemName = formatItemName(itemName);
     
     const selectedItem = shopItems.find(i => i.name === itemName);
-    if (!selectedItem) return `Item ${itemName} tidak tersedia untuk dibeli!`;
+    if (!selectedItem) return `❌️ Item ${itemName} tidak tersedia untuk dibeli!`;
     
     const totalPrice = selectedItem.price * amount;
     const moneyItem = inventory.find(i => i.name === 'Money');
     
     if (!moneyItem || moneyItem.count < totalPrice) {
-        return `Anda tidak memiliki cukup Money untuk membeli ${amount} ${itemName}!`;
+        return `❌️ Anda tidak memiliki cukup Money untuk membeli ${amount} ${itemName}!`;
     }
     
     removeItem('Money', totalPrice);
     
     addStackableItem(itemName, amount);
     
-    return `Anda membeli ${amount} ${itemName} seharga ${totalPrice} Money!`;
+    return `✅️ Anda membeli ${amount} ${itemName} seharga ${totalPrice} Money!`;
 }
 
 function adoptPet(petName, petType) {
     const validPets = ['dog', 'cat', 'fox'];
     if (!validPets.includes(petType)) {
-        return 'Jenis pet tidak valid!';
+        return '❌️ Jenis pet tidak valid!';
     }
     
     const emeraldIndex = inventory.findIndex(item =>
@@ -819,9 +874,9 @@ function adoptPet(petName, petType) {
         
         localStorage.setItem('pets', JSON.stringify(pets));
         localStorage.setItem('inventory', JSON.stringify(inventory));
-        return `Anda mengadopsi pet ${petType} bernama ${petName}!`;
+        return `✅️ Anda mengadopsi pet ${petType} bernama ${petName}!`;
     } else {
-        return 'Anda tidak memiliki cukup Emerald untuk mengadopsi pet!';
+        return '❌️ Anda tidak memiliki cukup Emerald untuk mengadopsi pet!';
     }
 }
 
@@ -886,7 +941,7 @@ function getPetBonus(resource) {
 
 function displayPets() {
     if (pets.length === 0) {
-        return 'Anda belum meliliki pet.'
+        return '⚠️ Anda belum meliliki pet.'
     }
     return pets.map(pet => `Nama: ${pet.name}, Jenis: ${pet.type}, Level: ${pet.level}, Exp: ${pet.exp}`).join(`\n`);
 }
@@ -911,14 +966,14 @@ function mineResources() {
     const pickaxe = inventory.find(item => pickaxes.includes(item.name));
     
     if (!pickaxe) {
-        return 'Anda tidak memiliki Pickaxe! Craft satu terlebih dahulu.';
+        return '❌️ Anda tidak memiliki Pickaxe! Craft satu terlebih dahulu.';
     }
     
     pickaxe.durability--;
     if (pickaxe.durability <= 0) {
         inventory.splice(inventory.indexOf(pickaxe), 1);
         localStorage.setItem('inventory', JSON.stringify(inventory));
-        return 'Pickaxe Anda telah hancur! Anda perlu membuat yang baru.';
+        return '⚠️ Pickaxe Anda telah hancur! Anda perlu membuat yang baru.';
     }
     
     const resources = [
@@ -951,7 +1006,7 @@ function mineResources() {
     
     const petBonus = getPetBonus(foundResource);
     localStorage.setItem('inventory', JSON.stringify(inventory));
-    return `Anda mendapatkan ${foundResource}! ${petBonus}(Durability Pickaxe: ${pickaxe.durability})`;
+    return `⛏️ Anda mendapatkan ${foundResource}! ${petBonus}(Durability Pickaxe: ${pickaxe.durability})`;
 }
 
 
@@ -980,7 +1035,7 @@ function removeItem(item, amount) {
 
 function displayInventory() {
     if (inventory.length === 0) {
-        return 'Inventori Anda kosong.';
+        return '⚠️ Inventori Anda kosong.';
     }
     return 'Inventori Anda:\n' +
         inventory.map(i => `${i.name} x${i.count}`).join('\n');
@@ -1009,7 +1064,8 @@ const questions = [
     { question: 'Apa nama proses tumbuhan membuat makanan sendiri?', answer: 'fotosintesis' },
     { question: 'Hewan apa yang dikenal sebagai mamalia terbesar di dunia?', answer: 'paus biru' },
     { question: 'Apa yang bisa dipatahkan, tapi tak pernah dipegang?', answer: 'janji' },
-    { question: 'Apa yang naik, tapi tidak pernah turun?', answer: 'umur' }
+    { question: 'Apa yang naik, tapi tidak pernah turun?', answer: 'umur' },
+    { question: 'Hewan apa yang memiliki tinju terkuat?', answer: 'udang pistol' }
 ];
 
 sendButton.addEventListener('click', sendMessage);
@@ -1060,7 +1116,7 @@ function getBotResponse(message) {
         userName = prompt('Masukkan nama baru Anda:');
         if (userName) {
             localStorage.setItem('userName', userName);
-            return `Nama Anda berhasil diubah menjadi ${userName}!`;
+            return `✅️ Nama Anda berhasil diubah menjadi ${userName}!`;
         } else {
             return 'Nama tidak diubah.';
         }
@@ -1094,7 +1150,7 @@ function getBotResponse(message) {
     } else if (message === 'rules') {
         return 'Rules: No Spam, No Promosi Apapun, No X-ray, No Cheat, No Homo, No Glitch';
     } else if (message === 'weapon list') {
-        return 'Gunakan weapon list (common/uncommon/rare/legendary/mythic/celestial)!';
+        return '⚠️ Gunakan weapon list (common/uncommon/rare/legendary/mythic/celestial)!';
     } else if (message === 'admin slot') {
         return 'Slot Admin Sisa 9';
     } else if (message === 'info server') {
@@ -1126,7 +1182,7 @@ function getBotResponse(message) {
         if (args.length === 3) {
             return adoptPet(args[1], args[2]);
         }
-        return 'Format perintah salah! Gunakan: adopt [nama_pet] [jenis_pet]'
+        return '⚠️ Format perintah salah! Gunakan: adopt [nama_pet] [jenis_pet]'
     } else if (message === 'my pets') {
         return displayPets();
     } else if (message.startsWith('ゴッドモード ')) {
@@ -1150,28 +1206,32 @@ function getBotResponse(message) {
         if (args.length === 3) {
             return buyItem(args[1], args[2]);
         }
-        return 'Format perintah salah! Gunakan: buy [nama_item] [jumlah]'
+        return '⚠️ Format perintah salah! Gunakan: buy [nama_item] [jumlah]'
     } else if (message.startsWith('sell ')) {
         if (args.length === 3) {
             return sellItem(args[1], args[2]);
         }
-        return 'Format perintah salah! Gunakan: sell [nama_item] [jumlah]';
+        return '⚠️ Format perintah salah! Gunakan: sell [nama_item] [jumlah]';
     } else if (message === 'quests') {
         return showQuests();
     } else if (message.startsWith('take quest ')) {
         return takeQuest(message.replace('take quest ', ''));
     } else if (message === 'my quests') {
-        return quests.length ? quests.map(q => `${q.name} - ${q.progress ? 'Sedang dikerjakan' : 'Belum dimulai'}`).join('\n') : 'Anda belum mengambil quest.';
+        return quests.length ? quests.map(q => `${q.name} - ${q.progress ? 'Sedang dikerjakan' : 'Belum dimulai'}`).join('\n') : '❌️ Anda belum mengambil quest.';
     } else if (message === 'quest progress') {
         let progress = showQuestProgress();
         return progress;
     } else if (message === 'clear chat') {
         chatbox.innerHTML = '';
-        return 'Chat berhasil dibersihkan!';
+        return '✅️ Chat berhasil dibersihkan!';
     } else if (message === 'fight') {
         return startFight();
     } else if (message === 'attack') {
-        return attackEnemy();
+        if (inBattle) {
+            attackEnemy();
+        } else if (inBossfight) {
+            attackBoss();
+        }
     } else if (message === 'defend') {
         return defend();
     } else if (message === 'use potion') {
@@ -1189,6 +1249,8 @@ function getBotResponse(message) {
         return displayPlaces();
     } else if (message === 'get celestial catalyst') {
         return getCelestialCatalyst();
+    } else if (message === 'bossfight') {
+        return bossfight();
     } else {
         return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
     }
@@ -1234,18 +1296,18 @@ function checkQuizAnswer(answer) {
 
         quizMode = false;
         currentQuestion = {};
-        return `Benar! ${achievementMessage}`;
+        return `✅️ Benar! ${achievementMessage}`;
     } else {
         const correctAnswer = currentQuestion.answer
         quizMode = false;
         currentQuestion = {};
-        return `Salah! Jawabannya adalah: ${correctAnswer}`;
+        return `❌️ Salah! Jawabannya adalah: ${correctAnswer}`;
     }
 }
 
 function displayAchievements() {
     if (achievements.length === 0) {
-        return 'Anda belum memiliki achievement. Mulai quiz dan dapatkan!';
+        return '⚠️ Anda belum memiliki achievement. Mulai quiz dan dapatkan!';
     }
     return 'Achievements Anda: ' + achievements.join(', ');
 }
@@ -1254,7 +1316,7 @@ function calculate(expression) {
     try {
         return `Hasil: ${eval(expression)}`;
     } catch {
-        return 'Ekspresi tidak valid. Contoh penggunaan: calc 1+1, calc 2-1, calc 2*2, calc 4/2';
+        return '❌️ Ekspresi tidak valid. Contoh penggunaan: calc 1+1, calc 2-1, calc 2*2, calc 4/2';
     }
 }
 
@@ -1294,13 +1356,13 @@ function craftTools(item) {
     const selectedRecipe = recipe.find(r => r.item.toLowerCase() === item);
     
     if (!selectedRecipe) {
-        return 'Resep tidak ditemukan.';
+        return '⚠️ Resep tidak ditemukan.';
     }
     
     for (let material of selectedRecipe.materials) {
         const invItem = getItem(material.name);
         if (!invItem || invItem.count < material.count) {
-            return `Anda tidak memiliki cukup ${material.name} untuk membuat ${item}.`;
+            return `❌️ Anda tidak memiliki cukup ${material.name} untuk membuat ${item}.`;
         }
     }
     
@@ -1311,7 +1373,7 @@ function craftTools(item) {
     inventory.push({ name: selectedRecipe.item, count: 1, durability: selectedRecipe.durability });
     localStorage.setItem('inventory', JSON.stringify(inventory));
 
-    return `Anda telah berhasil membuat ${selectedRecipe.item} dengan durability ${selectedRecipe.durability}!`;
+    return `🛠 Anda telah berhasil membuat ${selectedRecipe.item} dengan durability ${selectedRecipe.durability}!`;
 }
 
 function autoMine() {
@@ -1345,7 +1407,7 @@ function levelUpPet(petName) {
             localStorage.setItem('pets', JSON.stringify(pets));
             return `[Secret Command] ${petName} naik ke level ${pet.level}! シ`;
         } else {
-            return 'Pet tidak ditemukan!';
+            return '⚠️ Pet tidak ditemukan!';
         }
     }
 }
@@ -1353,7 +1415,7 @@ function levelUpPet(petName) {
 function makeUnbreakable() {
     if (tag === 'シ') {
         let pickaxe = inventory.find(item => item.name.includes('Pickaxe'));
-        if (!pickaxe) return 'Anda tidak memiliki pickaxe!';
+        if (!pickaxe) return '❌️ Anda tidak memiliki pickaxe!';
         
         pickaxe.durability = Infinity;
         localStorage.setItem('inventory', JSON.stringify(inventory));
@@ -1377,7 +1439,7 @@ function removePet(petName) {
             localStorage.setItem('pets', JSON.stringify(pets));
             return `[Secret Command] Pet "${petName}" telah dihapus! シ`;
         } else {
-            return 'Pet tidak ditemukan!';
+            return '⚠️ Pet tidak ditemukan!';
         }
     }
 }
