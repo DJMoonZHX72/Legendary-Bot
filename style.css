@@ -1,7 +1,7 @@
 @media screen and (max-width: 768px) {
     body {
         font-family: sans-serif;
-        background-image: url('background(mobile).png');
+        background-image: url('images/background(mobile).png');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -9,6 +9,23 @@
         color: #00F;
         text-align: center;
         padding: 20px;
+    }
+    .notif {
+        position: fixed;
+        top: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #9635ff;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px #00000055;
+        font-weight: bold;
+        transition: top 0.5s ease;
+        z-index: 9999;
+    }
+    .notif.muncul {
+        top: 20px;
     }
     #chatbox {
         border: 1px solid #ecf0f1;
@@ -138,7 +155,7 @@
 @media screen and (min-width: 768px) {
     body {
         font-family: sans-serif;
-        background-image: url('background(pc).png');
+        background-image: url('images/background(pc).png');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -146,6 +163,23 @@
         color: #00F;
         text-align: center;
         padding: 20px;
+    }
+    .notif {
+        position: fixed;
+        top: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #9635ff;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px #00000055;
+        font-weight: bold;
+        transition: top 0.5s ease;
+        z-index: 9999;
+    }
+    .notif.muncul {
+        top: 20px;
     }
     #chatbox {
         border: 1px solid #ecf0f1;
@@ -269,4 +303,4 @@
         color: #000;
         font-weight: bold;
     }
-        }
+}
