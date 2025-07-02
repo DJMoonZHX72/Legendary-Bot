@@ -272,6 +272,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Function
+function showNotif() {
+  const notif = document.getElementById('notifikasi');
+  notif.classList.add('muncul');
+  
+  setTimeout(() => {
+    notif.classList.remove('muncul');
+  }, 3000);
+}
+
+setInterval(showNotif, 60000);
+showNotif();
+
 function bossfight() {
     const currentEnemy = bosses.find(b => b.place === currentPlace.name);
     
