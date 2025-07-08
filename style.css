@@ -6,149 +6,9 @@
         background-position: center;
         background-repeat: no-repeat;
         background-color: #000000;
-        color: #00F;
+        color: white;
         text-align: center;
         padding: 20px;
-    }
-    .notif {
-        position: fixed;
-        top: -100px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #9635ff;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px #00000055;
-        font-weight: bold;
-        transition: top 0.5s ease;
-        z-index: 9999;
-    }
-    .notif.muncul {
-        top: 20px;
-    }
-    #chatbox {
-        border: 1px solid #ecf0f1;
-        border-radius: 20px;
-        padding: 10px;
-        margin: 20px auto;
-        width: 300px;
-        height: 200px;
-        overflow-y: scroll;
-        background-color: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-    }
-    #userInput {
-        width: 300px;
-        padding: 10px;
-        background-color: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 10px;
-    }
-    #sendButton {
-        padding: 10px 20px;
-        cursor: pointer;
-        background-color: #00000000;
-        border: 2px solid #000000;
-        color: white;
-        margin: 5px;
-    }
-    #questContainer {
-        border: 2px solid #444;
-        border-radius: 20px;
-        padding: 10px;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        color: #fff;
-        border-radius: 5px;
-        width: 300px;
-    }
-    #questList {
-        white-space: pre-line;
-    }
-    #questMessage {
-        display: none;
-        text-align: center;
-        font-weight: bold;
-        color: green;
-    }
-    .fade-in {
-        animation: fadeIn 0.5s ease-in-out;
-    }
-    @keyframes fadeIn {
-        from {
-            opacity: 0; 
-        }
-        to {
-            opacity: 1;
-        }
-    }
-    .btn {
-        margin: 100px;
-        padding: 15px 40px;
-        border: none;
-        outline: none;
-        color: #FFF;
-        cursor: pointer;
-        position: relative;
-        z-index: 0;
-        border-radius: 12px;
-        font-size: 16px;
-    }
-    .btn::after {
-        content: "";
-        z-index: -1;
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        left: 0;
-        top: 0;
-        border-radius: 10px;
-    }
-    /* glow */
-    .btn::before {
-        content: "";
-        background: linear-gradient(45deg, #FF0000, #FF7300, #FFFB00, #48FF00, #00FFD5, #002BFF, #FF00C8, #FF0000);
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        background-size: 600%;
-        z-index: -1;
-        width: calc(100% + 4px);
-        height:  calc(100% + 4px);
-        filter: blur(8px);
-        animation: glowing 20s linear infinite;
-        transition: opacity .3s ease-in-out;
-        border-radius: 10px;
-        opacity: 0;
-    }
-    
-    @keyframes glowing {
-        0% {
-            background-position: 0 0;
-        }
-        50% {
-            background-position: 400% 0;
-        }
-        100% {
-            background-position: 0 0;
-        }
-    }
-    
-    /* hover */
-    .btn:hover::before {
-        opacity: 1;
-    }
-
-    .btn:active:after {
-        background: transparent;
-    }
-    
-    .btn:active {
-        color: #000;
-        font-weight: bold;
     }
 }
 
@@ -160,147 +20,248 @@
         background-position: center;
         background-repeat: no-repeat;
         background-color: #000000;
-        color: #00F;
+        color: white;
         text-align: center;
         padding: 20px;
     }
-    .notif {
-        position: fixed;
-        top: -100px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #9635ff;
-        color: white;
-        padding: 10px 20px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px #00000055;
-        font-weight: bold;
-        transition: top 0.5s ease;
-        z-index: 9999;
+}
+
+#title {
+  color: #9635ff;
+  text-shadow: 0 0 5px #9635ff, 0 0 10px #9635ff, 0 0 15px #b26cff;
+}
+
+#ver {
+    color: #9635ff;
+    opacity: 0.7;
+    text-shadow: 0 0 1px #9635ff, 0 0 2px #9635ff, 0 0 3px #b26cff;
+}
+
+a {
+    color: white;
+}
+
+.notif {
+    position: fixed;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #9635ff, #5ed5ca);
+    color: black;
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px black;
+    font-weight: bold;
+    transition: top 0.5s ease;
+    z-index: 9999;
+}
+
+.notif.muncul {
+    top: 20px;
+}
+
+#chatbox {
+    border: 1px solid #ecf0f1;
+    border-radius: 20px;
+    padding: 10px;
+    margin: 20px auto;
+    width: 300px;
+    height: 200px;
+    overflow-y: scroll;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+#userInput {
+    width: 300px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+}
+
+#sendButton {
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #00000000;
+    border: 2px solid #000000;
+    color: white;
+    margin: 5px;
+}
+
+#questContainer {
+    border: 2px solid #444;
+    border-radius: 20px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    border-radius: 5px;
+    width: 300px;
+}
+
+#questList {
+    white-space: pre-line;
+}
+
+#questMessage {
+    display: none;
+    text-align: center;
+    font-weight: bold;
+    color: green;
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0; 
     }
-    .notif.muncul {
-        top: 20px;
-    }
-    #chatbox {
-        border: 1px solid #ecf0f1;
-        padding: 10px;
-        margin: 20px auto;
-        width: 300px;
-        height: 200px;
-        overflow-y: scroll;
-        background-color: rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        backdrop-filter: blur(10px);
-    }
-    #userInput {
-        width: 300px;
-        padding: 10px;
-        background-color: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        border-radius: 10px;
-    }
-    #sendButton {
-        padding: 10px 20px;
-        cursor: pointer;
-        background-color: #00000000;
-        border: 2px solid #000000;
-        color: white;
-        margin: 5px;
-    }
-    #questContainer {
-        border: 2px solid #444;
-        padding: 10px;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        color: #fff;
-        border-radius: 5px;
-        width: 300px;
-    }
-    #questList {
-        white-space: pre-line;
-    }
-    #questMessage {
-        display: none;
-        text-align: center;
-        font-weight: bold;
-        color: green;
-    }
-    .fade-in {
-        animation: fadeIn 0.5s ease-in-out;
-    }
-    @keyframes fadeIn {
-        from {
-            opacity: 0; 
-        }
-        to {
-            opacity: 1;
-        }
-    }
-    .btn {
-        margin: 100px;
-        padding: 15px 40px;
-        border: none;
-        outline: none;
-        color: #FFF;
-        cursor: pointer;
-        position: relative;
-        z-index: 0;
-        border-radius: 12px;
-        font-size: 16px;
-    }
-    .btn::after {
-        content: "";
-        z-index: -1;
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        left: 0;
-        top: 0;
-        border-radius: 10px;
-    }
-    /* glow */
-    .btn::before {
-        content: "";
-        background: linear-gradient(45deg, #FF0000, #FF7300, #FFFB00, #48FF00, #00FFD5, #002BFF, #FF00C8, #FF0000);
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        background-size: 600%;
-        z-index: -1;
-        width: calc(100% + 4px);
-        height:  calc(100% + 4px);
-        filter: blur(8px);
-        animation: glowing 20s linear infinite;
-        transition: opacity .3s ease-in-out;
-        border-radius: 10px;
-        opacity: 0;
-    }
-    
-    @keyframes glowing {
-        0% {
-            background-position: 0 0;
-        }
-        50% {
-            background-position: 400% 0;
-        }
-        100% {
-            background-position: 0 0;
-        }
-    }
-    
-    /* hover */
-    .btn:hover::before {
+    to {
         opacity: 1;
     }
+}
 
-    .btn:active:after {
-        background: transparent;
+.btn {
+    margin: 100px;
+    padding: 15px 40px;
+    border: none;
+    outline: none;
+    color: #FFF;
+    cursor: pointer;
+    position: relative;
+    z-index: 0;
+    border-radius: 12px;
+    font-size: 16px;
+}
+
+.btn::after {
+    content: "";
+    z-index: -1;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    left: 0;
+    top: 0;
+    border-radius: 10px;
+}
+
+/* glow */
+.btn::before {
+    content: "";
+    background: linear-gradient(45deg,
+    #9635ff, #5ed5ca, #ffffff, #ff0000, #9635ff);
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    background-size: 600%;
+    z-index: -1;
+    width: calc(100% + 4px);
+    height:  calc(100% + 4px);
+    filter: blur(8px);
+    animation: glowing 20s linear infinite;
+    transition: opacity .3s ease-in-out;
+    border-radius: 10px;
+    opacity: 0;
+}
+
+@keyframes glowing {
+    0% {
+        background-position: 0 0;
     }
-    
-    .btn:active {
-        color: #000;
-        font-weight: bold;
+    50% {
+        background-position: 400% 0;
     }
+    100% {
+        background-position: 0 0;
+    }
+}
+
+/* hover */
+.btn:hover::before {
+    opacity: 1;
+}
+
+.btn:active:after {
+    background: transparent;
+}
+
+.btn:active {
+    color: #000;
+    font-weight: bold;
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: auto;
+}
+
+ion-icon {
+  color: white;
+  font-size: 30px;
+  background: var(--color);
+  filter: brightness(0.9);
+  padding: 5px;
+  margin-left: 15px;
+  border-radius: 5px 0 0 5px;
+  margin-bottom: -14px;
+  margin-right: -4px;
+}
+
+/* btn front */
+.btn-flip::before {
+  content: attr(data-front);
+  color: white;
+  background: var(--color);
+  padding: 0 20px;
+  display: block;
+  line-height: 40px;
+  position: relative;
+  border-radius: 0 5px 5px 0;
+  transition: 0.5s;
+  /* tmp */
+  opacity: 1;
+}
+
+.btn-flip {
+  line-height: 40px;
+  position: relative;
+  letter-spacing: 1px;
+  text-align: center;
+  font-family: "Open Sans";
+  display: inline-block;
+  margin: 10px auto;
+  cursor: pointer;
+}
+
+/* btn back */
+.btn-flip::after {
+  content: attr(data-back);
+  color: white;
+  background: var(--color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  border-radius: 0 5px 5px 0;
+  /* tmp */
+  opacity: 1;
+  transition: 0.5s;
+  transform: translateY(-50%) rotateX(90deg);
+}
+
+/* hover */
+.btn-flip:hover::after {
+  opacity: 1;
+  transform: translateY(0) rotateX(0);
+}
+.btn-flip:hover::before {
+  opacity: 0;
+  transform: translateY(50%) rotateX(90deg);
 }
