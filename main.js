@@ -24,7 +24,7 @@ const questMessage = document.getElementById('questMessage');
 const versionIndicator = document.getElementById('ver');
 const title = document.getElementById('title');
 const questList = document.getElementById('questList');
-const botVersion = '1.18.0';
+const botVersion = '1.17.2';
 let quizMode = false;
 let currentQuestion = {};
 let correctAnswers = 0;
@@ -256,6 +256,39 @@ const bosses = [
 let inBossfight = false;
 let currentBoss = null;
 let chatHistory = [];
+
+// Additional Code
+userInput.addEventListener('keydown', async function (e) {
+    if (e.key === 'Enter') {
+        async function sendMessage() {
+            resetAfkTimer();
+            const userMessage = userInput.value;
+            if (userMessage.trim() === '') return;
+            
+            displayMessage(`${userName}: ${userMessage}`);
+            tambahChat('user', userMessage);
+            userInput.value = '';
+            
+            let botResponse;
+            if (quizMode) {
+                botResponse = checkQuizAnswer(userMessage);
+            } else {
+                botResponse = await getBotResponse(userMessage);
+            }
+            
+            displayMessage(`Bot: ${botResponse}`);
+            tambahChat('bot', botResponse);
+            
+            if (Math.random() < 0.5) {
+                const moonReply = await kirimKeMoonAI(userMessage);
+                displayMessage(`${moonReply}`);
+                tambahChat('AI', moonReply);
+                console.log('AI merespons');
+            }
+        }
+        await sendMessage();
+    }
+});
 
 // HTML
 versionIndicator.innerHTML = `V${botVersion}`;
@@ -1227,9 +1260,7 @@ async function getBotResponse(message) {
       }
     }
 
-    if (message === 'halo') {
-        return `Halo, ${userName}! Bagaimana saya bisa membantu Anda?`;
-    } else if (message === 'ganti nama') {
+    if (message === 'ganti nama') {
         userName = prompt('Masukkan nama baru Anda:');
         if (userName) {
             localStorage.setItem('userName', userName);
