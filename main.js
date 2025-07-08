@@ -4,7 +4,17 @@
 +*(c) Rizkiwibu9696. All rights reserved.*
 +*****************************************/
 
-console.warn('main.js loaded');
+// Error Detector
+console.log('%cmain.js loaded ✅️ %c(checking errors...)', 'color: #0f0; font-weight: bolder;', 'color: white;');
+
+window.addEventListener('error', function(event) {
+    const file = event.filename.split('/').pop();
+    const line = event.lineno;
+    const column = event.colno;
+    const message = `${event.error.name}: ${event.error.message}`;
+    
+    console.warn(`%c${file} has error on line ${line} column ${column}: ${message}`, 'color: red; font-weight: bolder;');
+});
 
 // Global Scope
 const chatbox = document.getElementById('chatbox');
@@ -14,7 +24,7 @@ const questMessage = document.getElementById('questMessage');
 const versionIndicator = document.getElementById('ver');
 const title = document.getElementById('title');
 const questList = document.getElementById('questList');
-const botVersion = '1.17.1';
+const botVersion = '1.17.2';
 let quizMode = false;
 let currentQuestion = {};
 let correctAnswers = 0;
@@ -237,7 +247,6 @@ const places = [
         ]
     }
 ];
-let challengeCompleted = false;
 let beforeSupernova = true;
 let currentPlace = JSON.parse(localStorage.getItem('place')) || {};
 const bosses = [
@@ -245,6 +254,7 @@ const bosses = [
     { name: 'Cosmic Guardian', place: 'Cosmic Throne', hp: 20000, maxHp: 20000, attack: 500, defense: 100, xp: 20000, money: 500000000, rewards: [{ item: 'Cosmic Claw Frame', count: 1 }] }
 ];
 let inBossfight = false;
+let currentBoss = null;
 
 // HTML
 versionIndicator.innerHTML = `V${botVersion}`;
@@ -269,6 +279,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     setInterval(enemyHeal, 10000);
+    
+    setInterval(showNotif, 60000);
+    showNotif();
+    
+    const youtubeButton = document.querySelector('.button-group span:nth-child(1) .btn-flip');
+    const whatsappButton = document.querySelector('.button-group span:nth-child(2) .btn-flip');
+    
+    youtubeButton.addEventListener('click', () => {
+        window.location.href = "https://www.instagram.com/djmoonzhx72?igsh=MTVkbjBmZ2JyMmJneg==";
+    });
+    
+    whatsappButton.addEventListener('click', () => {
+        window.location.href = "https://wa.me/6285218346505";
+    });
 });
 
 // Function
@@ -281,15 +305,14 @@ function showNotif() {
   }, 3000);
 }
 
-setInterval(showNotif, 60000);
-showNotif();
-
 function bossfight() {
     const currentEnemy = bosses.find(b => b.place === currentPlace.name);
     
     if (currentEnemy === '' || !currentEnemy) {
         return `❌️ Tidak ada boss di ${currentPlace.name}`;
     }
+    
+    currentBoss = currentEnemy;
     
     if (inBossfight) return '⚠️ Anda sudah dalam pertarungan!';
     
@@ -298,38 +321,71 @@ function bossfight() {
 }
 
 function attackBoss() {
-    if (!inBattle || !currentEnemy) {
-        return '❌️ Tidak ada boss yang sedang dilawan.';
+    if (!inBossfight) return '❌️ Tidak ada boss yang sedang dilawan.';
+    
+    let damage = player.attack - currentBoss.defense;
+    if (player.weapon) damage = player.weapon.damage - currentBoss.defense;
+    if (damage < 0) damage = 0;
+    currentBoss.hp -= damage;
+    
+    if (currentBoss.hp < 0) currentBoss.hp = 0;
+    
+    let attackMessage = `⚔️ Anda menyerang ${currentBoss.name} dengan ${damage} DMG!\n`;
+    attackMessage += `💥 HP ${currentBoss.name}: ${Math.max(0, currentBoss.hp)}/${currentBoss.maxHp}`;
+    
+    if (player.weapon) {
+        player.weapon.durability--;
+        attackMessage += ` (Durability: ${player.weapon.durability})`;
+        
+        if (player.weapon.durability <= 0) {
+            inventory.splice(inventory.indexOf(player.weapon), 1);
+            player.weapon = null;
+            attackMessage += `\n💥 Senjata ${player.weapon.name} hancur!`;
+        }
     }
     
-    const damageToBoss = Math.max(player.attack - currentEnemy.defense, 0);
-    currentEnemy.hp -= damageToBoss;
-    return `⚔️ Kamu menyerang ${currentEnemy.name} dan memberikan ${damageToBoss} damage!`;
-    
-    if (currentEnemy.hp <= 0) {
-        return `🎉 Kamu telah mengalahkan ${currentEnemy.name}!`;
-        inBattle = false;
+    if (currentBoss.hp <= 0) {
+        inBossfight = false;
         
-        player.hp = Math.min(player.hp + 10, player.maxHp);
-        return `🩸 Kesehatanmu dipulihkan 10 poin.`;
+        let rewardMessage = `🎉 Anda mengalahkan ${currentBoss.name}!\n`;
         
-        currentEnemy.rewards.forEach(reward => {
-            inventory.push({ item: reward.item, count: reward.count });
-            return `Kamu mendapatkan ${reward.count}x ${reward.item}!`;
+        addStackableItem('XP', currentBoss.xp);
+        addStackableItem('Money', currentBoss.money);
+        rewardMessage += `🏆 Reward: ${currentBoss.xp} XP, ${currentBoss.money} Money\n`;
+        
+        currentBoss.rewards.forEach(item => {
+            addStackableItem(item.item, item.count);
+            rewardMessage += `📦 ${item.count}x ${item.item}\n`;
         });
         
-        localStorage.setItem('inventory', JSON.stringify(inventory));
-        currentEnemy = null;
+        currentBoss.hp = currentBoss.maxHp;
+        
+        return attackMessage + '\n' + rewardMessage;
     }
     
-    const damageToPlayer = Math.max(currentEnemy.attack - player.defense, 0);
-    player.hp -= damageToPlayer;
-    return `${currentEnemy.name} menyerang balik dan memberikan ${damageToPlayer} damage padamu!`;
+    return attackMessage + '\n' + bossTurn();
+}
 
+function bossTurn() {
+    let enemyDamage = Math.max(0, currentBoss.attack - player.defense);
+    if (enemyDamage < 0) enemyDamage = 0;
+    
+    let beforeHp = player.hp;
+    player.hp -= enemyDamage;
+    if (player.hp < 0) player.hp = 0;
+    
+    let enemyAttackMessage = `👿 ${currentBoss.name} menyerang!\n`;
+    enemyAttackMessage += `💥 HP ${player.name}: ${player.hp}/${player.maxHp}`;
+    
     if (player.hp <= 0) {
-        return '💀 Kamu kalah! Pulihkan dirimu sebelum bertarung lagi.';
         inBattle = false;
+        
+        currentBoss.hp = currentBoss.maxHp;
+        
+        return enemyAttackMessage + `\n💀 Anda dikalahkan oleh ${currentBoss.name}!`;
     }
+    
+    return enemyAttackMessage;
 }
 
 function getCelestialCatalyst() {
@@ -622,7 +678,7 @@ function enemyTurn() {
 function enemyHeal() {
     if (!inBattle || !currentEnemy) return;
 
-    let healAmount = Math.floor(currentEnemy.maxHp * 0.1);
+    let healAmount = Math.floor(currentEnemy.hp * 0.1);
     if (currentEnemy.hp + healAmount > currentEnemy.maxHp) {
         healAmount = currentEnemy.maxHp - currentEnemy.hp;
     }
@@ -1142,7 +1198,7 @@ function getBotResponse(message) {
     } else if (message === 'quiz') {
         return startQuiz();
     } else if (message === 'menu') {
-        return 'Command: rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info achievement, inv, mine, craft (wooden pickaxe/stone pickaxe/iron pickaxe/gold pickaxe/diamond pickaxe/netherite pickaxe), chop a tree, adopt [nama_pet] [jenis_pet], my pets, buy [nama_item] [jumlah], sell [nama_item] [jumlah], quests, take quest [nama_quest], my quests, quest progress, clear chat, fight, attack, defend, use potion, go [place], adventure, places, current place, get celestial catalyst';
+        return 'Command: rank, weapon list (common/uncommon/rare/legendary/mythic/celestial), rules, admin slot, info server, info bot, changelog, support, quiz, calc, achievement, ganti nama, info achievement, inv, mine, craft (wooden pickaxe/stone pickaxe/iron pickaxe/gold pickaxe/diamond pickaxe/netherite pickaxe), chop a tree, adopt [nama_pet] [jenis_pet], my pets, buy [nama_item] [jumlah], sell [nama_item] [jumlah], quests, take quest [nama_quest], my quests, quest progress, clear chat, select weapon [weapon], fight, attack, defend, use potion, go [place], adventure, places, current place, get celestial catalyst, bossfight';
     } else if (message === 'achievement') {
         return displayAchievements();
     } else if (message === 'rank') {
@@ -1170,7 +1226,7 @@ function getBotResponse(message) {
     } else if (message === 'info bot') {
         return `Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Elden Craft (DJMoonZHX72), Versi Bot: ${botVersion}`;
     } else if (message === 'changelog') {
-        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine, 1.12.0: updated send button design, 1.13.0: bugfix and add crafting tools, 1.13.1: bugfix, 1.14.0: added pets, 1.15.1: shop, style update, & removed leaderboard, 1.16.0: added quest, code efficiency, 1.17.1: added fight, go, adventure, bugfix, more code efficiency';
+        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine, 1.12.0: updated send button design, 1.13.0: bugfix and add crafting tools, 1.13.1: bugfix, 1.14.0: added pets, 1.15.1: shop, style update, & removed leaderboard, 1.16.0: added quest, code efficiency, 1.17.1: added fight, go, adventure, bugfix, more code efficiency, 1.17.2: added bossfight, bugfix';
     } else if (message === 'support') {
         return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D https://github.com/DJMoonZHX72 Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
     } else if (message === 'info achievement') {
@@ -1240,9 +1296,11 @@ function getBotResponse(message) {
         return startFight();
     } else if (message === 'attack') {
         if (inBattle) {
-            attackEnemy();
+            return attackEnemy();
         } else if (inBossfight) {
-            attackBoss();
+            return attackBoss();
+        } else {
+            
         }
     } else if (message === 'defend') {
         return defend();
