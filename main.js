@@ -24,7 +24,7 @@ const questMessage = document.getElementById('questMessage');
 const versionIndicator = document.getElementById('ver');
 const title = document.getElementById('title');
 const questList = document.getElementById('questList');
-const botVersion = '1.17.2';
+const botVersion = '1.18.0';
 let quizMode = false;
 let currentQuestion = {};
 let correctAnswers = 0;
@@ -1275,7 +1275,7 @@ async function getBotResponse(message) {
     } else if (message === 'info bot') {
         return `Nama Bot: Legendary Bot, Dibuat Oleh CO-OWNER Legendary Elden Craft (DJMoonZHX72), Versi Bot: ${botVersion}`;
     } else if (message === 'changelog') {
-        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine, 1.12.0: updated send button design, 1.13.0: bugfix and add crafting tools, 1.13.1: bugfix, 1.14.0: added pets, 1.15.1: shop, style update, & removed leaderboard, 1.16.0: added quest, code efficiency, 1.17.1: added fight, go, adventure, bugfix, more code efficiency, 1.17.2: added bossfight, bugfix';
+        return '1.0.0: created bot, 1.1.0: added player info, menu, & rank, 1.2.0: added weapon list, rules, admin slot, info server, & info bot, 1.2.1: added changelog, & support, 1.4.0: added calculator, 1.5.0: added achievement, 1.5.1: updated achievement & quiz, 1.6.0: added name, 1.6.1: bugfix, 1.7.0: Updated Weapon List, 1.8.0: Updated Achievement System, 1.9.0: added leaderboard, 1.9.1: Fixed Quiz Bug & added fade animation, 1.10.0: Added Inventory, 1.11.0: added mine, 1.12.0: updated send button design, 1.13.0: bugfix and add crafting tools, 1.13.1: bugfix, 1.14.0: added pets, 1.15.1: shop, style update, & removed leaderboard, 1.16.0: added quest, code efficiency, 1.17.1: added fight, go, adventure, bugfix, more code efficiency, 1.17.2: added bossfight, bugfix, 1.18.0: added AI for more fun :)';
     } else if (message === 'support') {
         return 'DJMoonZHX72: https://youtube.com/@DJMoonZHX72  https://www.instagram.com/djmoonzhx72/profilecard/?igsh=MXhhczVneWtld3RpdQ==  https://whatsapp.com/channel/0029VarfkCz9mrGkIcsHrW1D https://github.com/DJMoonZHX72 Rizkiwibu9696: https://whatsapp.com/channel/0029Var7OtgGzzKU3Qeq5s09 https://www.instagram.com/ikikidal_03/profilecard/?igsh=dnVnMW5zOXo3dTFo , Legendary Craft: https://whatsapp.com/channel/0029VakZDNU9Gv7TRP0TH53K';
     } else if (message === 'info achievement') {
