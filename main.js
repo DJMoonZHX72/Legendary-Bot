@@ -255,6 +255,7 @@ const bosses = [
 ];
 let inBossfight = false;
 let currentBoss = null;
+let chatHistory = [];
 
 // HTML
 versionIndicator.innerHTML = `V${botVersion}`;
@@ -296,6 +297,51 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Function
+async function kirimKeMoonAI(currentAction) {
+    const prompt = generateMoonPrompt(currentAction);
+    
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + "AIzaSyClse0FKhDPX_4Ih304va9ozQ1nWaF-hX4", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            contents: [
+                {
+                role: "user",
+                parts: [{ text: prompt }]
+                }
+            ]
+        })
+    });
+    
+    const data = await res.json();
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || "MoonAI lagi tidur... 😴";
+}
+
+function generateMoonPrompt(currentAction) {
+    const historyText = chatHistory.map(c => {
+        const prefix = c.role === "user" ? "Pemain" : "Bot";
+        return `${prefix}: ${c.content}`;
+    }).join("\n");
+    
+    return `
+    Kamu adalah MoonAI, AI NPC RPG yang memiliki banyak role. Memiliki sifat yang sarkas dan lucu, atau apapun. Kamu bebas memberi dirimu judul atau role sesuai konteks (misalnya: "Final Boss", "Penjaga Gerbang Kosmik", "NPC Saksi Bisu", dll), dan gunakan itu sebagai bagian dari komentarmu.
+    
+    Jangan gunakan formatting teks seperti **
+    
+    Contoh format balasan:
+    MoonAI: [Role kamu] (gaya naratif opsional): [Komentar]
+
+    Berikut riwayat obrolan:\n\n${historyText}\n\nAksi terbaru:\n${currentAction}
+    
+    Sekarang, buat komentar sesuai gaya MoonAI.
+`;
+}
+
+function tambahChat(role, content) {
+    chatHistory.push({ role, content });
+    while (chatHistory.length > 30) chatHistory.shift();
+}
+
 function showNotif() {
   const notif = document.getElementById('notifikasi');
   notif.classList.add('muncul');
@@ -378,7 +424,7 @@ function bossTurn() {
     enemyAttackMessage += `💥 HP ${player.name}: ${player.hp}/${player.maxHp}`;
     
     if (player.hp <= 0) {
-        inBattle = false;
+        inBossfight = false;
         
         currentBoss.hp = currentBoss.maxHp;
         
@@ -765,10 +811,6 @@ function updateQuestProgress(action, itemName, amount = 1) {
     localStorage.setItem('quests', JSON.stringify(quests));
     getQuestProgress();
     
-    if (progressMessage) {
-        sendMessage(progressMessage);
-    }
-    
     return progressMessage || 'Tidak ada progres yang diperbarui.';
 }
 
@@ -1136,25 +1178,32 @@ const questions = [
     { question: 'Hewan apa yang memiliki tinju terkuat?', answer: 'udang pistol' }
 ];
 
-sendButton.addEventListener('click', sendMessage);
-
-function sendMessage() {
+sendButton.addEventListener('click', async function sendMessage() {
     resetAfkTimer();
     const userMessage = userInput.value;
     if (userMessage.trim() === '') return;
 
     displayMessage(`${userName}: ${userMessage}`);
+    tambahChat('user', userMessage);
     userInput.value = '';
 
     let botResponse;
     if (quizMode) {
         botResponse = checkQuizAnswer(userMessage);
     } else {
-        botResponse = getBotResponse(userMessage);
+        botResponse = await getBotResponse(userMessage);
     }
 
     displayMessage(`Bot: ${botResponse}`);
-}
+    tambahChat('bot', botResponse);
+    
+    if (Math.random() < 0.5) {
+        const moonReply = await kirimKeMoonAI(userMessage);
+        displayMessage(`${moonReply}`);
+        tambahChat('AI', moonReply);
+        console.log('AI merespons');
+    }
+});
 
 function displayMessage(message) {
     const messageElement = document.createElement('div');
@@ -1164,7 +1213,7 @@ function displayMessage(message) {
     chatbox.scrollTop = chatbox.scrollHeight;
 }
 
-function getBotResponse(message) {
+async function getBotResponse(message) {
     message = message.toLowerCase();
     const args = message.split(' ');
     
@@ -1322,7 +1371,7 @@ function getBotResponse(message) {
     } else if (message === 'bossfight') {
         return bossfight();
     } else {
-        return 'Maaf, saya tidak mengerti. Ketik "menu" untuk melihat list perintah';
+        return await kirimKeMoonAI(message);
     }
 }
 
